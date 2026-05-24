@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             $table->string('no_kamar')->nullable();
             $table->string('no_wa', 15)->nullable();
-            $table->enum('role', ['resident', 'admin'])->default('resident');
+            $table->enum('role', ['resident', 'petugas', 'admin'])->default('resident');
         });
     }
 

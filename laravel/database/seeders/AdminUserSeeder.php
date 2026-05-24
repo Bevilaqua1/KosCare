@@ -13,7 +13,7 @@ class AdminUserSeeder extends Seeder
         User::create([
             'name' => 'Admin Bank Sampah',
             'email' => 'admin@koscare.com',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('12345678'),
             'role' => 'admin',
             'no_kamar' => null,
             'no_wa' => '08123456789',

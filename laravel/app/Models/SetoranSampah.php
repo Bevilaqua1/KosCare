@@ -11,8 +11,14 @@ class SetoranSampah extends Model
 
     protected $table = 'setoran_sampah';
     protected $fillable = [
-        'user_id', 'kategori_id', 'estimasi_berat', 'berat_aktual',
-        'tanggal_setor', 'foto', 'status'
+    'user_id', 'kategori_id', 'berat_estimasi', 'tanggal_setor',
+    'foto', 'status', 'berat_aktual', 'poin_didapat', 'petugas_id'
+    ];
+
+
+    protected $casts = [
+    'tanggal_setor' => 'date',
+    'status' => 'string',
     ];
 
     // Relasi belongsTo ke User
@@ -26,4 +32,11 @@ class SetoranSampah extends Model
     {
         return $this->belongsTo(KategoriSampah::class, 'kategori_id');
     }
+
+    //relassi ke petugassampah
+    public function petugas()
+    {
+    return $this->belongsTo(User::class, 'petugas_id');
+    }
+
 }

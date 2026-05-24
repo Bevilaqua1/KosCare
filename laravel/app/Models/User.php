@@ -11,24 +11,50 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     protected $fillable = [
-        'name', 'email', 'password', 'no_kamar', 'no_wa', 'role',
+    'name',
+    'email',
+    'password',
+    'role',       // <-- tambahkan
+    'no_wa',      // jika ada di tabel
+    'no_kamar',   // jika ada
     ];
 
     protected $hidden = [
-        'password', 'remember_token',
+    'password',
+    'remember_token',
     ];
 
-    protected function casts(): array
+    protected $casts = [
+    'email_verified_at' => 'datetime',
+    'role' => 'string',
+    ];
+
+// Cek role
+    public function isAdmin(): bool
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return $this->role === 'admin';
     }
 
-    // Relasi: satu user memiliki banyak setoran sampah
+    public function isResident(): bool
+    {
+        return $this->role === 'resident';
+    }
+
+    public function isPetugas(): bool
+    {
+    return $this->role === 'petugas';
+    }
+
+// Relasi penukaran poin (sebagai penghuni)
+    public function penukaranPoin()
+    {
+    return $this->hasMany(PenukaranPoin::class);
+    }
+
+// Relasi ke setoran_sampah
     public function setoranSampah()
     {
         return $this->hasMany(SetoranSampah::class);
     }
+
 }
