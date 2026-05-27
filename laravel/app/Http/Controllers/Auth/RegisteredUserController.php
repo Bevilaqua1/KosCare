@@ -29,23 +29,27 @@ class RegisteredUserController extends Controller
      * @throws ValidationException
      */
     public function store(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        ]);
+{
+    $request->validate([
+        'name' => ['required', 'string', 'max:255'],
+        'email' => ['required', 'string', 'email', 'max:255', 'unique:'.User::class],
+        'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        'no_kamar' => ['required', 'string', 'max:100'],
+        // no_wa juga bisa ditambahkan jika diperlukan
+    ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+    $user = User::create([
+        'name' => $request->name,
+        'email' => $request->email,
+        'password' => Hash::make($request->password),
+        'role' => 'resident',
+        'no_kamar' => $request->no_kamar,
+        // 'no_wa' => $request->no_wa, // jika ada
+    ]);
 
-        event(new Registered($user));
+    event(new Registered($user));
+    Auth::login($user);
 
-        Auth::login($user);
-
-        return redirect(route('dashboard', absolute: false));
-    }
+    return redirect()->route('resident.dashboard');
+}
 }

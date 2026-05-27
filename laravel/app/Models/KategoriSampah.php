@@ -10,7 +10,7 @@ class KategoriSampah extends Model
     use HasFactory;
 
     protected $table = 'kategori_sampah';
-    protected $fillable = ['nama_kategori', 'deskripsi'];
+    protected $fillable = ['nama_kategori', 'deskripsi', 'poin_per_kg'];
 
     // Relasi: satu kategori memiliki banyak setoran sampah
     public function setoranSampah()

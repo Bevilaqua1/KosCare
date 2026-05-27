@@ -12,11 +12,11 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('kategori_id')->constrained('kategori_sampah')->onDelete('cascade');
-            $table->decimal('estimasi_berat', 8, 2); // dalam kg
+            $table->decimal('estimasi_berat', 8, 2)->nullable(); // dalam kg
             $table->decimal('berat_aktual', 8, 2)->nullable();
             $table->date('tanggal_setor');
             $table->string('foto')->nullable(); // path foto
-            $table->enum('status', ['pending', 'disetujui', 'selesai'])->default('pending');
+            $table->enum('status', ['pending', 'diangkut', 'selesai', 'ditolak'])->default('pending');
             $table->timestamps();
         });
     }

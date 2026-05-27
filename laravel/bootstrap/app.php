@@ -12,6 +12,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         // Daftarkan alias middleware untuk role
+        $middleware->trustProxies(at: '*');
         $middleware->alias([
             'admin'   => \App\Http\Middleware\EnsureUserIsAdmin::class,
             'petugas' => \App\Http\Middleware\EnsureUserIsPetugas::class,
@@ -21,3 +22,5 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions) {
         //
     })->create();
+
+        

@@ -4,11 +4,49 @@ namespace App\Http\Controllers\Resident;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\KategoriSampah;
+use App\Models\SetoranSampah;
+use App\Models\JadwalPengangkutan;
+use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return view('resident.dashboard');
+        $kategoris = KategoriSampah::all();
+        $activeTab = $request->query('tab', 'dash-penghuni');
+
+        // Riwayat setoran milik penghuni yang sedang login
+        $riwayatSetoran = SetoranSampah::with('kategori')
+            ->where('user_id', Auth::id())
+            ->latest()
+            ->get();
+
+        $totalSetoran = $riwayatSetoran->count();
+        $totalPoin = $riwayatSetoran->sum('poin_didapat');
+
+        // Semua jadwal (untuk tab Jadwal Angkut)
+        $jadwals = JadwalPengangkutan::with('petugas')
+            ->orderBy('tanggal')
+            ->orderBy('waktu_mulai')
+            ->get();
+
+        // Jadwal terdekat (untuk kartu Ikhtisar)
+        $jadwalTerdekat = JadwalPengangkutan::with('petugas')
+            ->where('tanggal', '>=', Carbon::today())
+            ->orderBy('tanggal')
+            ->orderBy('waktu_mulai')
+            ->first();
+
+        return view('Resident.dashboard', compact(
+            'kategoris',
+            'activeTab',
+            'riwayatSetoran',
+            'totalSetoran',
+            'totalPoin',
+            'jadwals',
+            'jadwalTerdekat'
+        ));
     }
 }

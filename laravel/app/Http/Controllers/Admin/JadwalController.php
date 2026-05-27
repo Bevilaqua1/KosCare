@@ -3,63 +3,67 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\JadwalPengangkutan;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class JadwalController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    // Tampilkan daftar jadwal (tidak terpakai karena di dashboard, tapi kita biarkan)
     public function index()
     {
-        //
+        $jadwals = JadwalPengangkutan::with('petugas')->latest()->get();
+        return view('Admin.jadwal.index', compact('jadwals'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
+    // Simpan jadwal baru
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'tanggal' => 'required|date',
+            'waktu_mulai' => 'required',
+            'waktu_selesai' => 'required|after:waktu_mulai',
+            'keterangan' => 'nullable|string',
+            'petugas_id' => 'nullable|exists:users,id',
+        ]);
+
+        JadwalPengangkutan::create($request->all());
+
+        return redirect()->route('admin.dashboard', ['tab' => 'jadwal-admin'])
+            ->with('success', 'Jadwal pengangkutan berhasil ditambahkan.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    // Mengembalikan data jadwal dalam bentuk JSON untuk modal edit
+    public function edit(JadwalPengangkutan $jadwal)
     {
-        //
+        if (request()->ajax()) {
+            return response()->json($jadwal);
+        }
+        return redirect()->route('admin.dashboard', ['tab' => 'jadwal-admin']);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    // Update jadwal
+    public function update(Request $request, JadwalPengangkutan $jadwal)
     {
-        //
+        $request->validate([
+            'tanggal' => 'required|date',
+            'waktu_mulai' => 'required',
+            'waktu_selesai' => 'required|after:waktu_mulai',
+            'keterangan' => 'nullable|string',
+            'petugas_id' => 'nullable|exists:users,id',
+        ]);
+
+        $jadwal->update($request->all());
+
+        return redirect()->route('admin.dashboard', ['tab' => 'jadwal-admin'])
+            ->with('success', 'Jadwal berhasil diperbarui.');
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    // Hapus jadwal
+    public function destroy(JadwalPengangkutan $jadwal)
     {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        $jadwal->delete();
+        return redirect()->route('admin.dashboard', ['tab' => 'jadwal-admin'])
+            ->with('success', 'Jadwal berhasil dihapus.');
     }
 }

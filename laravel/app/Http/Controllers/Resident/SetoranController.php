@@ -3,63 +3,47 @@
 namespace App\Http\Controllers\Resident;
 
 use App\Http\Controllers\Controller;
+use App\Models\SetoranSampah;
+use App\Models\KategoriSampah;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class SetoranController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
+    // Menampilkan form (sebenarnya sudah ada di dashboard, jadi bisa diabaikan)
     public function create()
     {
-        //
+        $kategoris = KategoriSampah::all();
+        return view('Resident.setoran.create', compact('kategoris'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+    // Menyimpan pengajuan baru
     public function store(Request $request)
     {
-        //
-    }
+        $request->validate([
+            'kategori_id' => 'required|exists:kategori_sampah,id',
+            'estimasi_berat' => 'nullable|numeric|min:0.1',
+            'tanggal_setor' => 'required|date',
+            'foto' => 'required|image|mimes:jpeg,png,jpg|max:5120', // max 5MB
+        ]);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
+        // Upload foto
+        $fotoPath = null;
+        if ($request->hasFile('foto')) {
+            $fotoPath = $request->file('foto')->store('setoran_foto', 'public');
+        }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
+        // Simpan setoran
+        SetoranSampah::create([
+            'user_id' => Auth::id(),
+            'kategori_id' => $request->kategori_id,
+            'estimasi_berat' => $request->estimasi_berat,
+            'tanggal_setor' => $request->tanggal_setor,
+            'foto' => $fotoPath,
+            'status' => 'pending',
+        ]);
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return redirect()->route('resident.dashboard', ['tab' => 'riwayat-penghuni'])
+            ->with('success', 'Setoran berhasil diajukan! Menunggu petugas mengambil sampah Anda.');
     }
 }
