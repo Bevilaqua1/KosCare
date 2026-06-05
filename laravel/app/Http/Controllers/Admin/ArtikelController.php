@@ -3,63 +3,77 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ArtikelEdukasi;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class ArtikelController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $artikels = ArtikelEdukasi::latest('tanggal_terbit')->get();
+        return view('Admin.artikel.index', compact('artikels'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'judul' => 'required|string|max:255',
+            'isi' => 'required',
+            'gambar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'tanggal_terbit' => 'required|date',
+        ]);
+
+        $gambarPath = null;
+        if ($request->hasFile('gambar')) {
+            $gambarPath = $request->file('gambar')->store('artikel', 'public');
+        }
+
+        ArtikelEdukasi::create([
+            'judul' => $request->judul,
+            'isi' => $request->isi,
+            'gambar' => $gambarPath,
+            'tanggal_terbit' => $request->tanggal_terbit,
+        ]);
+
+        return redirect()->route('admin.dashboard', ['tab' => 'artikel-admin'])
+            ->with('success', 'Artikel berhasil ditambahkan.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function edit(ArtikelEdukasi $artikel)
     {
-        //
+        if (request()->ajax()) {
+            // Ubah format tanggal_terbit menjadi Y-m-d untuk input type="date"
+            $artikel->tanggal_terbit = optional($artikel->tanggal_terbit)->format('Y-m-d');
+            return response()->json($artikel);
+        }
+        return redirect()->route('admin.dashboard', ['tab' => 'artikel-admin']);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function update(Request $request, ArtikelEdukasi $artikel)
     {
-        //
+        $request->validate([
+            'judul' => 'required|string|max:255',
+            'isi' => 'required',
+            'gambar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'tanggal_terbit' => 'required|date',
+        ]);
+
+        $data = $request->only('judul', 'isi', 'tanggal_terbit');
+        if ($request->hasFile('gambar')) {
+            $data['gambar'] = $request->file('gambar')->store('artikel', 'public');
+        }
+
+        $artikel->update($data);
+
+        return redirect()->route('admin.dashboard', ['tab' => 'artikel-admin'])
+            ->with('success', 'Artikel berhasil diperbarui.');
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function destroy(ArtikelEdukasi $artikel)
     {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        $artikel->delete();
+        return redirect()->route('admin.dashboard', ['tab' => 'artikel-admin'])
+            ->with('success', 'Artikel berhasil dihapus.');
     }
 }

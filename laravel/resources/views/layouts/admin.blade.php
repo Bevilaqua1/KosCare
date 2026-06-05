@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/koscare.css') }}">
-
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
     <div class="app-layout" id="app-admin">
@@ -23,6 +23,9 @@
                 </li>
                 <li class="menu-item" onclick="switchTab('admin', 'validasi-admin', this)">
                     <i class="fa-solid fa-list-check"></i> Validasi Setoran
+                    @if($pendingValidationCount > 0)
+                        <span class="badge">{{ $pendingValidationCount }}</span>
+                    @endif
                 </li>
                 <li class="menu-item" onclick="switchTab('admin', 'kategori-admin', this)">
                     <i class="fa-solid fa-tags"></i> Kelola Kategori
@@ -34,14 +37,23 @@
                     onclick="switchTab('admin', 'reward-admin', this)">
                     <i class="fa-solid fa-gift"></i> Kelola Reward
                 </li>
+                <li class="menu-item {{ $activeTab == 'artikel-admin' ? 'active' : '' }}"
+                    onclick="switchTab('admin', 'artikel-admin', this)">
+                    <i class="fa-solid fa-newspaper"></i> Kelola Artikel
+                </li>
+                <li class="menu-item {{ $activeTab == 'laporan-admin' ? 'active' : '' }}" 
+                    onclick="switchTab('admin', 'laporan-admin', this)">
+                    <i class="fa-solid fa-chart-simple"></i> Laporan
+                </li>
                 <li class="menu-item" onclick="switchTab('admin', 'pengguna-admin', this)">
                     <i class="fa-solid fa-users-gear"></i> Kelola Pengguna
                 </li>
+                
             </ul>
             <div class="sidebar-footer">
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit" class="btn btn-outline btn-danger" style="width: 100%; border-color: var(--danger); color: var(--danger);">
+                    <button type="submit" class="btn btn-outline" style="width: 100%;">
                         <i class="fa-solid fa-power-off"></i> Keluar Sistem
                     </button>
                 </form>
@@ -53,9 +65,15 @@
             <div class="topbar">
                 <div class="topbar-title" id="title-admin">@yield('page-title', 'Ikhtisar Utama')</div>
                 <div class="topbar-actions">
-                    <div class="notification-btn">
+                    <div class="notification-btn" style="position:relative;">
                         <i class="fa-solid fa-inbox"></i>
-                        <div class="notification-dot" style="background: var(--warning);"></div>
+                        @if($pendingValidationCount > 0)
+                            <span style="position:absolute; top: -4px; right: -4px; background: var(--danger); color: white; 
+                                        font-size: 10px; font-weight: 700; width: 18px; height: 18px; 
+                                        display: flex; align-items: center; justify-content: center; border-radius: 50%;">
+                                {{ $pendingValidationCount }}
+                            </span>
+                        @endif
                     </div>
                     <div class="user-profile">
                         <div class="avatar" style="background: var(--text-main);">AD</div>

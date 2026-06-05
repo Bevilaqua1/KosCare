@@ -107,45 +107,40 @@
                                 @endif
                             </td>
                             <td>
-                                <form action="{{ route('admin.setoran.verifikasi', $setoran->id) }}" method="POST" class="form-verifikasi">
-                                    @csrf
-                                    @method('PUT')
-                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                @if($setoran->status == 'diangkut')
+                                    <form id="verifikasi-form-{{ $setoran->id }}" action="{{ route('admin.setoran.verifikasi', $setoran->id) }}" method="POST" class="form-verifikasi" style="display: flex; align-items: center; gap: 8px;">
+                                        @csrf
+                                        @method('PUT')
                                         <input type="number" name="berat_aktual" class="form-control" 
                                             style="width:80px; padding:8px;" step="0.1" required>
                                         <span>Kg</span>
-                                    </div>
-                                </form>
+                                    </form>
+                                @else
+                                    {{-- Biarkan kosong atau beri placeholder jika perlu --}}
+                                @endif
                             </td>
                             <td class="action-buttons">
-                            @if($setoran->status == 'pending')
-                                {{-- Status pending: hanya tombol Jadwalkan / badge --}}
-                                @if(!$setoran->jadwal_id)
-                                    <button class="btn btn-small btn-outline" onclick="openJadwalSetoranModal({{ $setoran->id }})">
-                                        <i class="fa-solid fa-calendar-plus"></i> Jadwalkan
-                                    </button>
-                                @else
-                                    <span class="badge badge-info">Sudah Dijadwalkan</span>
-                                @endif
+                                @if($setoran->status == 'pending')
+                                    @if(!$setoran->jadwal_id)
+                                        <button class="btn btn-small btn-outline" onclick="openJadwalSetoranModal({{ $setoran->id }})">
+                                            <i class="fa-solid fa-calendar-plus"></i> Jadwalkan
+                                        </button>
+                                    @else
+                                        <span class="badge badge-info">Sudah Dijadwalkan</span>
+                                    @endif
 
                                 @elseif($setoran->status == 'diangkut')
-                                    <div style="display: flex; align-items: center; gap: 8px;">
-                                        <form action="{{ route('admin.setoran.verifikasi', $setoran->id) }}" method="POST" class="form-verifikasi" style="display: inline;">
-                                            @csrf
-                                            @method('PUT')
-                                            <button type="submit" class="btn btn-small" style="background: var(--primary);">
-                                                <i class="fa-solid fa-check"></i> Setujui
-                                            </button>
-                                        </form>
-                                        <form action="{{ route('admin.setoran.tolak', $setoran->id) }}" method="POST" style="display:inline">
-                                            @csrf @method('PUT')
-                                            <button type="submit" class="btn btn-small btn-danger btn-icon" title="Tolak">
-                                                <i class="fa-solid fa-xmark"></i>
-                                            </button>
-                                        </form>
-                                    </div>
+                                    <button type="submit" class="btn btn-small" form="verifikasi-form-{{ $setoran->id }}" style="background: var(--primary); margin-right: 8px;">
+                                        <i class="fa-solid fa-check"></i> Setujui
+                                    </button>
+                                    <form action="{{ route('admin.setoran.tolak', $setoran->id) }}" method="POST" style="display:inline;">
+                                        @csrf @method('PUT')
+                                        <button type="submit" class="btn btn-small btn-danger btn-icon" title="Tolak">
+                                            <i class="fa-solid fa-xmark"></i>
+                                        </button>
+                                    </form>
                                 @endif
-                        </td>
+                            </td>
                         @empty
                         <tr>
                             <td colspan="5" style="text-align: center;">Tidak ada setoran yang perlu divalidasi.</td>
@@ -332,12 +327,83 @@
             </div>
         </div>
 
-    <!-- Tab: Kelola Pengguna -->
+<!-- Tab: Kelola Artikel -->
+    <div id="artikel-admin" class="tab-content {{ $activeTab == 'artikel-admin' ? 'active' : '' }}">
+        <div class="panel">
+            <div class="panel-header">
+                <h3 class="panel-title">Kelola Artikel Edukasi</h3>
+                <button class="btn btn-small" onclick="openArtikelModal()">
+                    <i class="fa-solid fa-plus"></i> Tulis Artikel
+                </button>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr><th>Judul / Isi</th><th>Tanggal</th><th>Aksi</th></tr>
+                    </thead>
+                    <tbody>
+                        @forelse($artikels as $artikel)
+                        <tr>
+                            <td>
+                                <strong>{{ $artikel->judul }}</strong><br>
+                                <span class="text-sm">{{ Str::limit(strip_tags($artikel->isi), 100) }}</span>
+                            </td>
+                            <td>{{ optional($artikel->tanggal_terbit)->format('d M Y') ?? $artikel->created_at->format('d M Y') }}</td>
+                            <td class="action-buttons">
+                                <button class="btn btn-small btn-outline btn-icon" onclick="editArtikel({{ $artikel->id }})">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                <form action="{{ route('admin.artikel.destroy', $artikel->id) }}" method="POST" style="display:inline">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="btn btn-small btn-danger btn-icon" onclick="return confirm('Yakin hapus?')">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr><td colspan="3" style="text-align: center;">Belum ada artikel.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+<!-- Tab: Kelola Pengguna -->
     <div id="pengguna-admin" class="tab-content {{ $activeTab == 'pengguna-admin' ? 'active' : '' }}">
         {{-- ... --}}
     </div>
 
-    <!-- ===================== MODAL KATEGORI ===================== -->
+ <!-- Tab: Laporan -->
+    <div id="laporan-admin" class="tab-content {{ $activeTab == 'laporan-admin' ? 'active' : '' }}">
+        <div class="card-grid">
+            <div class="card">
+                <div class="card-icon" style="background:var(--info-bg); color:#1D4ED8;">
+                    <i class="fa-solid fa-chart-line"></i>
+                </div>
+                <div class="card-info">
+                    <h3>Total Sampah Masuk</h3>
+                    <div class="value">{{ number_format($totalSampahTerkumpul, 1) }}<span style="font-size:16px; font-weight:600; color:var(--text-muted); margin-left:4px;">Kg</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header"><h3 class="panel-title">Grafik Volume Sampah per Bulan</h3></div>
+            <div class="panel-body">
+                <canvas id="barChart" style="max-height: 400px;"></canvas>
+            </div>
+        </div>
+
+        <div class="panel" style="margin-top: 24px;">
+            <div class="panel-header"><h3 class="panel-title">Komposisi Kategori Sampah</h3></div>
+            <div class="panel-body">
+                <canvas id="pieChart" style="max-height: 400px;"></canvas>
+            </div>
+        </div>
+    </div>
+<!-- ===================== MODAL KATEGORI ===================== -->
     <div id="kategoriModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
                 background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
         <div style="background:white; border-radius:16px; width:90%; max-width:500px; padding:32px; 
@@ -449,11 +515,45 @@
             </form>
         </div>
     </div>
+
+    <!-- Modal Artikel -->
+    <div id="artikelModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
+                background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
+        <div style="background:white; border-radius:16px; width:90%; max-width:600px; padding:32px; 
+                    box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+            <h3 style="margin-top:0;" id="artikelModalTitle">Tulis Artikel</h3>
+            <form id="artikelForm" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div id="artikelMethodField"></div>
+                <div class="form-group">
+                    <label>Judul</label>
+                    <input type="text" name="judul" id="artikel_judul" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Isi / Konten</label>
+                    <textarea name="isi" id="artikel_isi" class="form-control" rows="8" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Tanggal Terbit</label>
+                    <input type="date" name="tanggal_terbit" id="artikel_tanggal" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Gambar (opsional)</label>
+                    <input type="file" name="gambar" id="artikel_gambar" class="form-control" accept="image/*">
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
+                    <button type="button" class="btn btn-outline" style="width:auto;" onclick="closeArtikelModal()">Batal</button>
+                    <button type="submit" class="btn" style="width:auto;">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 @endsection
 
 @push('scripts')
 <script>
-    // ----- Modal Kategori -----
+// ----- Modal Kategori -----
     function openKategoriModal() {
         document.getElementById('modalTitle').innerText = 'Tambah Kategori';
         document.getElementById('kategoriForm').action = "{{ route('admin.kategori.store') }}";
@@ -497,7 +597,7 @@
         }
     });
 
-    // ----- Modal Jadwal -----
+// ----- Modal Jadwal -----
     function openJadwalModal() {
         document.getElementById('jadwalModalTitle').innerText = 'Tambah Jadwal';
         document.getElementById('jadwalForm').action = "{{ route('admin.jadwal.store') }}";
@@ -545,8 +645,8 @@
         }
     });
 
-        // ----- Modal Jadwal Setoran -----
-        function openJadwalSetoranModal(setoranId) {
+// ----- Modal Jadwal Setoran -----
+    function openJadwalSetoranModal(setoranId) {
             document.getElementById('jadwalSetoranForm').action = `/admin/setoran/${setoranId}/jadwalkan`;
             document.getElementById('tanggal_jemput').value = '';
             document.getElementById('waktu_mulai_jemput').value = '';
@@ -565,5 +665,97 @@
                 closeJadwalSetoranModal();
             }
         });
+// ----- Modal Artikel -----
+    function openArtikelModal() {
+            document.getElementById('artikelModalTitle').innerText = 'Tulis Artikel';
+            document.getElementById('artikelForm').action = "{{ route('admin.artikel.store') }}";
+            document.getElementById('artikelMethodField').innerHTML = '';
+            document.getElementById('artikel_judul').value = '';
+            document.getElementById('artikel_isi').value = 'data.isi';
+            document.getElementById('artikel_tanggal').value = '';
+            document.getElementById('artikel_gambar').value = '';
+            document.getElementById('artikelModal').style.display = 'flex';
+        }
+
+        async function editArtikel(id) {
+            try {
+                const response = await fetch(`/admin/artikel/${id}/edit`, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+                });
+                if (!response.ok) throw new Error('Gagal mengambil data');
+                const data = await response.json();
+
+                document.getElementById('artikelModalTitle').innerText = 'Edit Artikel';
+                document.getElementById('artikelForm').action = `/admin/artikel/${data.id}`;
+                document.getElementById('artikelMethodField').innerHTML = '@csrf @method('PUT')';
+                document.getElementById('artikel_judul').value = data.judul;
+                document.getElementById('artikel_isi').value = data.isi;
+                document.getElementById('artikel_tanggal').value = data.tanggal_terbit; // sudah diformat Y-m-d dari controller
+                document.getElementById('artikel_gambar').value = ''; // reset input file
+                document.getElementById('artikelModal').style.display = 'flex';
+            } catch (error) {
+                alert('Terjadi kesalahan: ' + error.message);
+            }
+        }
+
+        function closeArtikelModal() {
+            document.getElementById('artikelModal').style.display = 'none';
+        }
+
+        document.getElementById('artikelModal').addEventListener('click', function(e) {
+            if (e.target === this) closeArtikelModal();
+        });
+// skrip garfik js
+// Data dari controller (diambil dari variabel PHP)
+const chartLabels = @json($chartLabels);
+const chartValues = @json($chartValues);
+const pieLabels = @json($pieLabels);
+const pieValues = @json($pieValues);
+
+// Bar Chart
+const ctxBar = document.getElementById('barChart')?.getContext('2d');
+if (ctxBar) {
+    new Chart(ctxBar, {
+        type: 'bar',
+        data: {
+            labels: chartLabels,
+            datasets: [{
+                label: 'Berat (Kg)',
+                data: chartValues,
+                backgroundColor: 'rgba(16, 185, 129, 0.6)',
+                borderColor: 'rgba(16, 185, 129, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+}
+
+// Pie Chart
+const ctxPie = document.getElementById('pieChart')?.getContext('2d');
+if (ctxPie) {
+    new Chart(ctxPie, {
+        type: 'pie',
+        data: {
+            labels: pieLabels,
+            datasets: [{
+                data: pieValues,
+                backgroundColor: ['#10B981', '#F59E0B', '#3B82F6', '#EF4444', '#8B5CF6'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+}
 </script>
 @endpush

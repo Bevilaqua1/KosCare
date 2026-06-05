@@ -9,6 +9,9 @@
     <link rel="stylesheet" href="{{ asset('css/koscare.css') }}">
 </head>
 <body>
+    @php
+        $activeTab = $activeTab ?? 'dash-penghuni';
+    @endphp
     <div id="app-penghuni" class="app-layout">
         <!-- Sidebar -->
         <div class="sidebar">
@@ -34,6 +37,10 @@
                     onclick="switchTab('penghuni', 'profile-resident', this)">
                     <i class="fa-solid fa-user-gear"></i> Profil Saya
                 </li> -->
+                <li class="menu-item {{ $activeTab == 'artikel-resident' ? 'active' : '' }}" 
+                    onclick="switchTab('penghuni', 'artikel-resident', this)">
+                    <i class="fa-solid fa-newspaper"></i> Artikel Edukasi
+                </li>
                 <li class="menu-item" onclick="switchTab('penghuni', 'riwayat-penghuni', this)">
                     <i class="fa-solid fa-clock-rotate-left"></i> Riwayat Transaksi
                 </li>
@@ -79,19 +86,34 @@
     <script>
         function switchTab(role, tabId, element) {
             const app = document.getElementById('app-' + role);
+            
+            // Jika elemen app tidak ada (berarti bukan halaman dashboard), redirect
+            if (!app) {
+                window.location.href = '/resident/dashboard?tab=' + tabId;
+                return;
+            }
+
+            const targetTab = document.getElementById(tabId);
+            
+            // Jika tab yang dicari tidak ada di halaman ini, redirect
+            if (!targetTab) {
+                window.location.href = '/resident/dashboard?tab=' + tabId;
+                return;
+            }
+
+            // Hapus kelas 'active' dari semua menu-item
             const menuItems = app.querySelectorAll('.menu-item');
             menuItems.forEach(item => item.classList.remove('active'));
             if (element) element.classList.add('active');
 
+            // Sembunyikan semua tab-content, tampilkan yang dipilih
             const tabContents = app.querySelectorAll('.tab-content');
             tabContents.forEach(tab => tab.classList.remove('active'));
+            
+            void targetTab.offsetWidth; // trigger reflow
+            targetTab.classList.add('active');
 
-            const targetTab = document.getElementById(tabId);
-            if (targetTab) {
-                void targetTab.offsetWidth;
-                targetTab.classList.add('active');
-            }
-
+            // Update topbar title jika element diberikan
             const topbarTitle = document.getElementById('title-' + role);
             if (element && topbarTitle) {
                 let clone = element.cloneNode(true);

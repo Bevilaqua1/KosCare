@@ -307,3 +307,50 @@
         .text-sm { font-size: 13px; color: var(--text-muted); font-weight: 400; }
         .mt-2 { margin-top: 8px; }
         .mb-4 { margin-bottom: 16px; }
+        
+/* === KONSISTENSI GLOBAL === */
+        body, .form-control, .btn, table, .badge, .text-sm, .card-info h3, .card-info .value {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        /* Ukuran teks dasar yang seragam */
+        table th, table td {
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        /* Judul panel */
+        .panel-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        /* Kartu dashboard */
+        .card-info h3 {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .card-info .value {
+            font-size: 28px;
+            font-weight: 800;
+        }
+
+        /* Badge status */
+        .badge {
+            font-size: 12px;
+            font-weight: 700;
+            padding: 6px 12px;
+            border-radius: 20px;
+        }
+
+        /* Tombol kecil */
+        .btn-small {
+            font-size: 13px;
+            padding: 8px 16px;
+        }
+
+        /* Modal heading */
+        #modalTitle, #jadwalModalTitle, #jadwalSetoranModalTitle {
+            font-size: 20px;
+            font-weight: 700;
+        }

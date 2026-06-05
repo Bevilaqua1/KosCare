@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use App\Models\KategoriReward;
 use App\Models\PenukaranPoin;
+use App\Models\ArtikelEdukasi;
+
 class DashboardController extends Controller
 {
     public function index(Request $request)
@@ -53,6 +55,10 @@ class DashboardController extends Controller
                             ->latest()
                             ->get();
 
+        // Artikel edukasi
+        $artikels = ArtikelEdukasi::latest('tanggal_terbit')->get();
+
+
         return view('Resident.dashboard', compact(
             'kategoris',
             'activeTab',
@@ -62,7 +68,8 @@ class DashboardController extends Controller
             'jadwals',
             'jadwalTerdekat',
             'rewards',
-            'riwayatPenukaran'      
+            'riwayatPenukaran',
+            'artikels'
         ));
     }
 }
