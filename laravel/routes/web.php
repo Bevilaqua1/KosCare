@@ -40,7 +40,7 @@ Route::middleware(['auth', 'resident'])
 
         Route::get('/reward', [App\Http\Controllers\Resident\RewardController::class, 'index'])
             ->name('reward.index');
-        Route::post('/reward/tukar', [App\Http\Controllers\Resident\RewardController::class, 'tukar'])
+        Route::post('/reward/tukar', [App\Http\Controllers\Resident\RewardController::class, 'store'])
             ->name('reward.tukar');
         Route::get('/reward/riwayat', [App\Http\Controllers\Resident\RewardController::class, 'riwayat'])
             ->name('reward.riwayat');
@@ -83,7 +83,11 @@ Route::middleware(['auth', 'admin'])
 
         Route::put('/setoran/{setoran}/tolak', [App\Http\Controllers\Admin\SetoranController::class, 'tolak'])
             ->name('setoran.tolak');
-
+           
+        Route::get('/setoran/{setoran}/jadwalkan', [App\Http\Controllers\Admin\SetoranController::class, 'jadwalkanForm'])
+            ->name('setoran.jadwalkan');
+        Route::post('/setoran/{setoran}/jadwalkan', [App\Http\Controllers\Admin\SetoranController::class, 'jadwalkan'])
+            ->name('setoran.jadwalkan.submit');
         Route::resource('jadwal', App\Http\Controllers\Admin\JadwalController::class);
 
         Route::resource('artikel', App\Http\Controllers\Admin\ArtikelController::class);

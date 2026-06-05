@@ -4,17 +4,18 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\SetoranSampah;
 use Illuminate\Http\Request;
+use App\Models\User;
+use App\Models\JadwalPengangkutan;
 
 class SetoranController extends Controller
 {
     // Tampilkan semua setoran yang perlu divalidasi (status = 'diangkut')
     public function index()
     {
-        $setorans = SetoranSampah::with(['user', 'kategori'])
-                    ->where('status', 'diangkut')
-                    ->latest()
-                    ->get();
-        return view('Admin.setoran.index', compact('setorans'));
+        $setoransValidasi = SetoranSampah::with(['user', 'kategori', 'jadwal'])
+    ->whereIn('status', ['pending', 'diangkut'])
+    ->latest()
+    ->get();    
     }
 
     // Method ini akan dipanggil dari dashboard admin (tab validasi)
@@ -60,4 +61,48 @@ class SetoranController extends Controller
         return redirect()->route('admin.dashboard', ['tab' => 'validasi-admin'])
             ->with('success', 'Setoran ditolak.');
     }
+
+    // Menampilkan form jadwal (untuk modal, bisa via AJAX)
+    public function jadwalkanForm(SetoranSampah $setoran)
+    {
+        $petugasList = User::where('role', 'petugas')->get();
+        if (request()->ajax()) {
+            return response()->json([
+                'setoran' => $setoran,
+                'petugasList' => $petugasList
+            ]);
+        }
+        return view('Admin.setoran.jadwalkan', compact('setoran', 'petugasList'));
+    }
+
+    // Menyimpan jadwal baru untuk setoran
+    public function jadwalkan(Request $request, SetoranSampah $setoran)
+    {
+        $request->validate([
+            'tanggal_jemput' => 'required|date|after:today',
+            'waktu_mulai' => 'required',
+            'waktu_selesai' => 'required|after:waktu_mulai',
+            'petugas_id' => 'required|exists:users,id',
+            'keterangan' => 'nullable|string',
+        ]);
+
+        // Buat jadwal baru
+        $jadwal = JadwalPengangkutan::create([
+            'tanggal' => $request->tanggal_jemput,
+            'waktu_mulai' => $request->waktu_mulai,
+            'waktu_selesai' => $request->waktu_selesai,
+            'petugas_id' => $request->petugas_id,
+            'keterangan' => $request->keterangan,
+        ]);
+
+        // Hubungkan setoran ke jadwal
+        $setoran->update([
+            'jadwal_id' => $jadwal->id,
+            'petugas_id' => $request->petugas_id,
+        ]);
+
+        return redirect()->route('admin.dashboard', ['tab' => 'validasi-admin'])
+            ->with('success', 'Jadwal penjemputan berhasil dibuat untuk setoran #' . $setoran->id);
+    }
+
 }

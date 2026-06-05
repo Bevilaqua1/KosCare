@@ -43,6 +43,7 @@
                         <tr>
                             <th>Lokasi Kamar</th>
                             <th>Info Pemohon</th>
+                            <th>Tanggal Jemput</th>   {{-- kolom baru --}}
                             <th>Kategori & Estimasi</th>
                             <th>Foto</th>
                             <th>Tindakan</th>
@@ -54,6 +55,7 @@
                             <td><div style="font-size:20px; font-weight:800; color:var(--primary-dark);">{{ $setoran->user->no_kamar ?? '?' }}</div></td>
                             <td><strong>{{ $setoran->user->name }}</strong><br><span class="text-sm">{{ $setoran->user->no_kamar ? 'Kamar ' . $setoran->user->no_kamar : '' }}</span></td>
                             <td>{{ $setoran->kategori->nama_kategori ?? '-' }} (± {{ $setoran->estimasi_berat ?? '?' }} Kg)</td>
+                            <td>{{ optional($setoran->jadwal)->tanggal ? $setoran->jadwal->tanggal->format('d M Y') : '-' }}</td>
                             <td>
                                 @if($setoran->foto)
                                     <img src="{{ asset('storage/' . $setoran->foto) }}" style="width:48px;height:48px;object-fit:cover;border-radius:8px;">
@@ -76,7 +78,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="5" style="text-align: center;">Tidak ada tugas penjemputan saat ini.</td>
+                            <td colspan="6" style="text-align: center;">Tidak ada tugas penjemputan saat ini.</td>
                         </tr>
                         @endforelse
                     </tbody>
@@ -88,10 +90,40 @@
     <!-- Tab Riwayat Angkut -->
     <div id="riwayat-petugas" class="tab-content">
         <div class="panel">
-            <div class="panel-header"><h3 class="panel-title">Riwayat Pengangkutan Selesai</h3></div>
-            <div class="panel-body" style="text-align: center; color: var(--text-muted); padding: 60px;">
-                <i class="fa-solid fa-clock-rotate-left" style="font-size: 48px; color: var(--border); margin-bottom: 16px;"></i>
-                <p>Riwayat pengangkutan akan segera tersedia.</p>
+            <div class="panel-header">
+                <h3 class="panel-title">Riwayat Pengangkutan Selesai</h3>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Waktu Angkut</th>
+                            <th>Lokasi Kamar</th>
+                            <th>Jenis Sampah</th>
+                            <th>Status Admin</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($riwayatAngkut as $setoran)
+                        <tr>
+                            <td>{{ $setoran->updated_at->format('d M Y, H:i') }}</td>
+                            <td><strong>{{ $setoran->user->no_kamar ?? '-' }}</strong><br>{{ $setoran->user->name }}</td>
+                            <td>{{ $setoran->kategori->nama_kategori ?? '-' }}</td>
+                            <td>
+                                @if($setoran->status == 'diangkut')
+                                    <span class="badge badge-warning">Diperiksa Admin</span>
+                                @elseif($setoran->status == 'selesai')
+                                    <span class="badge badge-success">Selesai & Masuk Gudang</span>
+                                @endif
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="4" style="text-align: center;">Belum ada riwayat pengangkutan.</td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>

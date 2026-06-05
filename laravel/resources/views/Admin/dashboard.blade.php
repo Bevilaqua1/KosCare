@@ -112,24 +112,40 @@
                                     @method('PUT')
                                     <div style="display: flex; align-items: center; gap: 8px;">
                                         <input type="number" name="berat_aktual" class="form-control" 
-                                               style="width:80px; padding:8px;" step="0.1" required>
+                                            style="width:80px; padding:8px;" step="0.1" required>
                                         <span>Kg</span>
                                     </div>
                                 </form>
                             </td>
                             <td class="action-buttons">
-                                <button type="button" class="btn btn-small" style="background: var(--primary);"
-                                        onclick="event.preventDefault(); this.closest('tr').querySelector('.form-verifikasi').submit();">
-                                    <i class="fa-solid fa-check"></i> Setujui
-                                </button>
-                                <form action="{{ route('admin.setoran.tolak', $setoran->id) }}" method="POST" style="display:inline">
-                                    @csrf @method('PUT')
-                                    <button type="submit" class="btn btn-small btn-danger btn-icon" title="Tolak">
-                                        <i class="fa-solid fa-xmark"></i>
+                            @if($setoran->status == 'pending')
+                                {{-- Status pending: hanya tombol Jadwalkan / badge --}}
+                                @if(!$setoran->jadwal_id)
+                                    <button class="btn btn-small btn-outline" onclick="openJadwalSetoranModal({{ $setoran->id }})">
+                                        <i class="fa-solid fa-calendar-plus"></i> Jadwalkan
                                     </button>
-                                </form>
-                            </td>
-                        </tr>
+                                @else
+                                    <span class="badge badge-info">Sudah Dijadwalkan</span>
+                                @endif
+
+                                @elseif($setoran->status == 'diangkut')
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <form action="{{ route('admin.setoran.verifikasi', $setoran->id) }}" method="POST" class="form-verifikasi" style="display: inline;">
+                                            @csrf
+                                            @method('PUT')
+                                            <button type="submit" class="btn btn-small" style="background: var(--primary);">
+                                                <i class="fa-solid fa-check"></i> Setujui
+                                            </button>
+                                        </form>
+                                        <form action="{{ route('admin.setoran.tolak', $setoran->id) }}" method="POST" style="display:inline">
+                                            @csrf @method('PUT')
+                                            <button type="submit" class="btn btn-small btn-danger btn-icon" title="Tolak">
+                                                <i class="fa-solid fa-xmark"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                @endif
+                        </td>
                         @empty
                         <tr>
                             <td colspan="5" style="text-align: center;">Tidak ada setoran yang perlu divalidasi.</td>
@@ -240,6 +256,82 @@
         </div>
     </div>
 
+    <!-- Tab: Kelola Reward & Penukaran -->
+        <div id="reward-admin" class="tab-content {{ $activeTab == 'reward-admin' ? 'active' : '' }}">
+            <!-- Panel Katalog Reward -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h3 class="panel-title">Katalog Reward</h3>
+                    <button class="btn btn-small" onclick="openRewardModal()">
+                        <i class="fa-solid fa-plus"></i> Tambah Item
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead><tr><th>Item</th><th>Poin</th><th>Stok</th><th>Aksi</th></tr></thead>
+                        <tbody>
+                            @forelse($rewards as $item)
+                            <tr>
+                                <td><strong>{{ $item->nama_item }}</strong><br><span class="text-sm">{{ $item->deskripsi ?? '-' }}</span></td>
+                                <td>{{ $item->poin_diperlukan }} Poin</td>
+                                <td>{{ $item->stok }}</td>
+                                <td class="action-buttons">
+                                    <button class="btn btn-small btn-outline btn-icon" onclick="editReward({{ $item->id }})">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+                                    <form action="{{ route('admin.reward.destroy', $item->id) }}" method="POST" style="display:inline">
+                                        @csrf @method('DELETE')
+                                        <button class="btn btn-small btn-danger btn-icon" onclick="return confirm('Yakin hapus?')"><i class="fa-solid fa-trash"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr><td colspan="4" class="text-center">Belum ada item reward.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+               <!-- Tab Validasi Penukaran -->
+            <div class="panel" style="margin-top: 24px;">
+                <div class="panel-header">
+                    <h3 class="panel-title">Validasi Penukaran Poin</h3>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead><tr><th>Penghuni</th><th>Item</th><th>Jumlah</th><th>Total Poin</th><th>Aksi</th></tr></thead>
+                        <tbody>
+                            @forelse($penukarans as $p)
+                            <tr>
+                                <td>{{ $p->user->name }}</td>
+                                <td>{{ $p->kategoriReward->nama_item }}</td>
+                                <td>{{ $p->jumlah }}</td>
+                                <td>{{ $p->total_poin }}</td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <form action="{{ route('admin.reward.proses-penukaran', $p->id) }}" method="POST" style="display:inline-flex; gap:8px; margin:0;">
+                                            @csrf @method('PUT')
+                                            <input type="hidden" name="status" value="disetujui">
+                                            <button class="btn btn-small" style="background: var(--primary);">Setujui</button>
+                                        </form>
+                                        <form action="{{ route('admin.reward.proses-penukaran', $p->id) }}" method="POST" style="display:inline-flex; margin:0;">
+                                            @csrf @method('PUT')
+                                            <input type="hidden" name="status" value="ditolak">
+                                            <button class="btn btn-small btn-danger btn-icon" title="Tolak"><i class="fa-solid fa-xmark"></i></button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr><td colspan="5" class="text-center">Tidak ada penukaran menunggu.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
     <!-- Tab: Kelola Pengguna -->
     <div id="pengguna-admin" class="tab-content {{ $activeTab == 'pengguna-admin' ? 'active' : '' }}">
         {{-- ... --}}
@@ -269,6 +361,48 @@
                 <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
                     <button type="button" class="btn btn-outline" style="width:auto;" onclick="closeKategoriModal()">Batal</button>
                     <button type="submit" class="btn" style="width:auto;">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+        <!-- Modal Jadwal Setoran -->
+    <div id="jadwalSetoranModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
+                background:rgba(0,0,0,0.5); z-index:1001; justify-content:center; align-items:center;">
+        <div style="background:white; border-radius:16px; width:90%; max-width:500px; padding:32px; 
+                    box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+            <h3 style="margin-top:0;" id="jadwalSetoranModalTitle">Jadwalkan Penjemputan</h3>
+            <form id="jadwalSetoranForm" method="POST">
+                @csrf
+                <div class="form-group">
+                    <label>Tanggal Jemput</label>
+                    <input type="date" name="tanggal_jemput" id="tanggal_jemput" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Waktu Mulai</label>
+                    <input type="time" name="waktu_mulai" id="waktu_mulai_jemput" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Waktu Selesai</label>
+                    <input type="time" name="waktu_selesai" id="waktu_selesai_jemput" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Petugas</label>
+                    <select name="petugas_id" id="petugas_id_jemput" class="form-control" required>
+                        <option value="">-- Pilih Petugas --</option>
+                        @foreach($petugasList as $petugas)
+                            <option value="{{ $petugas->id }}">{{ $petugas->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Keterangan</label>
+                    <textarea name="keterangan" id="keterangan_jemput" class="form-control" rows="2"></textarea>
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
+                    <button type="button" class="btn btn-outline" style="width:auto;" onclick="closeJadwalSetoranModal()">Batal</button>
+                    <button type="submit" class="btn" style="width:auto;">Simpan Jadwal</button>
                 </div>
             </form>
         </div>
@@ -410,5 +544,26 @@
             closeJadwalModal();
         }
     });
+
+        // ----- Modal Jadwal Setoran -----
+        function openJadwalSetoranModal(setoranId) {
+            document.getElementById('jadwalSetoranForm').action = `/admin/setoran/${setoranId}/jadwalkan`;
+            document.getElementById('tanggal_jemput').value = '';
+            document.getElementById('waktu_mulai_jemput').value = '';
+            document.getElementById('waktu_selesai_jemput').value = '';
+            document.getElementById('petugas_id_jemput').value = '';
+            document.getElementById('keterangan_jemput').value = '';
+            document.getElementById('jadwalSetoranModal').style.display = 'flex';
+        }
+
+        function closeJadwalSetoranModal() {
+            document.getElementById('jadwalSetoranModal').style.display = 'none';
+        }
+
+        document.getElementById('jadwalSetoranModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeJadwalSetoranModal();
+            }
+        });
 </script>
 @endpush

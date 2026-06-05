@@ -26,6 +26,14 @@
                 <li class="menu-item" onclick="switchTab('penghuni', 'jadwal-penghuni', this)">
                     <i class="fa-regular fa-calendar-check"></i> Jadwal Angkut
                 </li>
+                <li class="menu-item {{ $activeTab == 'reward-resident' ? 'active' : '' }}"
+                    onclick="switchTab('penghuni', 'reward-resident', this)">
+                    <i class="fa-solid fa-gift"></i> Tukar Poin
+                </li>
+                <!-- <li class="menu-item {{ $activeTab == 'profile-resident' ? 'active' : '' }}" 
+                    onclick="switchTab('penghuni', 'profile-resident', this)">
+                    <i class="fa-solid fa-user-gear"></i> Profil Saya
+                </li> -->
                 <li class="menu-item" onclick="switchTab('penghuni', 'riwayat-penghuni', this)">
                     <i class="fa-solid fa-clock-rotate-left"></i> Riwayat Transaksi
                 </li>
@@ -49,7 +57,7 @@
                         <i class="fa-regular fa-bell"></i>
                         <div class="notification-dot"></div>
                     </div>
-                    <div class="user-profile">
+                    <div class="user-profile" onclick="switchTab('penghuni', 'profile-resident', null)" style="cursor: pointer;">
                         <div class="avatar">
                             {{ Auth::user()->no_kamar ?? '?' }}
                         </div>

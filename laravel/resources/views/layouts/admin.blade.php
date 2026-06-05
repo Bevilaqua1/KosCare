@@ -30,6 +30,10 @@
                 <li class="menu-item" onclick="switchTab('admin', 'jadwal-admin', this)">
                     <i class="fa-solid fa-calendar-days"></i> Kelola Jadwal
                 </li>
+                <li class="menu-item {{ $activeTab == 'reward-admin' ? 'active' : '' }}" 
+                    onclick="switchTab('admin', 'reward-admin', this)">
+                    <i class="fa-solid fa-gift"></i> Kelola Reward
+                </li>
                 <li class="menu-item" onclick="switchTab('admin', 'pengguna-admin', this)">
                     <i class="fa-solid fa-users-gear"></i> Kelola Pengguna
                 </li>

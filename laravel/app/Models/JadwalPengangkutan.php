@@ -30,4 +30,9 @@ class JadwalPengangkutan extends Model
     {
         return $this->belongsTo(User::class, 'petugas_id');
     }
+    // Relasi ke setoran sampah
+    public function setorans()
+    {
+        return $this->hasMany(SetoranSampah::class, 'jadwal_id');
+    } 
 }

@@ -9,7 +9,8 @@ use App\Models\SetoranSampah;
 use App\Models\JadwalPengangkutan;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
-
+use App\Models\KategoriReward;
+use App\Models\PenukaranPoin;
 class DashboardController extends Controller
 {
     public function index(Request $request)
@@ -28,16 +29,29 @@ class DashboardController extends Controller
 
         // Semua jadwal (untuk tab Jadwal Angkut)
         $jadwals = JadwalPengangkutan::with('petugas')
+            ->whereHas('setorans', function ($query) {
+                $query->where('user_id', Auth::id());
+            })
             ->orderBy('tanggal')
             ->orderBy('waktu_mulai')
             ->get();
 
         // Jadwal terdekat (untuk kartu Ikhtisar)
         $jadwalTerdekat = JadwalPengangkutan::with('petugas')
+            ->whereHas('setorans', function ($query) {
+                $query->where('user_id', Auth::id());
+            })
             ->where('tanggal', '>=', Carbon::today())
             ->orderBy('tanggal')
             ->orderBy('waktu_mulai')
             ->first();
+
+        // penukaran poin
+        $rewards = KategoriReward::where('stok', '>', 0)->get();
+        $riwayatPenukaran = PenukaranPoin::with('kategoriReward')
+                            ->where('user_id', Auth::id())
+                            ->latest()
+                            ->get();
 
         return view('Resident.dashboard', compact(
             'kategoris',
@@ -46,7 +60,9 @@ class DashboardController extends Controller
             'totalSetoran',
             'totalPoin',
             'jadwals',
-            'jadwalTerdekat'
+            'jadwalTerdekat',
+            'rewards',
+            'riwayatPenukaran'      
         ));
     }
 }

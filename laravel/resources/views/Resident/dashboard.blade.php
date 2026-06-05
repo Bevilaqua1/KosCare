@@ -189,6 +189,7 @@
                             <th>Berat Tervalidasi</th>
                             <th>Poin Diterima</th>
                             <th>Status</th>
+                            <th>Jadwal Jemput</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -221,6 +222,13 @@
                                     <span class="badge badge-danger"><i class="fa-solid fa-xmark"></i> Ditolak</span>
                                 @endif
                             </td>
+                            <td>
+                                @if($setoran->jadwal)
+                                    {{ $setoran->jadwal->tanggal->format('d M Y') }}, {{ $setoran->jadwal->waktu_mulai->format('H:i') }}
+                                @else
+                                    -
+                                @endif
+                            </td>
                         </tr>
                         @empty
                         <tr>
@@ -229,6 +237,101 @@
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- TAB REWEARD -->
+    <div id="reward-resident" class="tab-content {{ $activeTab == 'reward-resident' ? 'active' : '' }}">
+        <h3>Katalog Reward</h3>
+        <div class="card-grid">
+            @forelse($rewards as $item)
+            <div class="card">
+                <div class="card-icon"><i class="fa-solid fa-gift"></i></div>
+                <div class="card-info">
+                    <h3>{{ $item->nama_item }}</h3>
+                    <p class="text-sm">{{ $item->deskripsi }}</p>
+                    <div class="value" style="font-size:20px;">{{ $item->poin_diperlukan }} Pts</div>
+                    <form action="{{ route('resident.reward.tukar') }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="reward_id" value="{{ $item->id }}">
+                        Jumlah: <input type="number" name="jumlah" value="1" min="1" max="{{ $item->stok }}" style="width:60px;">
+                        <button type="submit" class="btn btn-small">Tukar</button>
+                    </form>
+                </div>
+            </div>
+            @empty
+            <p>Belum ada reward tersedia.</p>
+            @endforelse
+        </div>
+
+        <h3 style="margin-top:24px;">Riwayat Penukaran</h3>
+        <table>
+            <thead><tr><th>Item</th><th>Jumlah</th><th>Poin</th><th>Status</th><th>Tanggal</th></tr></thead>
+            <tbody>
+                @forelse($riwayatPenukaran as $r)
+                <tr>
+                    <td>{{ $r->kategoriReward->nama_item }}</td>
+                    <td>{{ $r->jumlah }}</td>
+                    <td>{{ $r->total_poin }}</td>
+                    <td>
+                        @if($r->status == 'pending') <span class="badge badge-warning">Menunggu</span>
+                        @elseif($r->status == 'disetujui') <span class="badge badge-success">Disetujui</span>
+                        @else <span class="badge badge-danger">Ditolak</span>
+                        @endif
+                    </td>
+                    <td>{{ $r->tanggal_penukaran->format('d M Y') }}</td>
+                </tr>
+                @empty
+                <tr><td colspan="5">Belum ada penukaran.</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+
+
+    <!-- Tab Profil -->
+     {{-- Tab: Profil Saya --}}
+    <div id="profile-resident" class="tab-content {{ $activeTab == 'profile-resident' ? 'active' : '' }}">
+        <div class="panel" style="max-width: 600px; margin: 0 auto;">
+            <div class="panel-header">
+                <h3 class="panel-title">Edit Profil Saya</h3>
+            </div>
+            <div class="panel-body">
+                <form action="{{ route('resident.profile.update') }}" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <div class="form-group">
+                        <label>Nama Lengkap</label>
+                        <input type="text" name="name" class="form-control" 
+                            value="{{ old('name', Auth::user()->name) }}" required>
+                        @error('name')
+                            <span class="text-sm" style="color: var(--danger);">{{ $message }}</span>
+                        @enderror
+                    </div>
+                    <div class="form-group">
+                        <label>Nomor WhatsApp</label>
+                        <input type="text" name="no_wa" class="form-control" 
+                            value="{{ old('no_wa', Auth::user()->no_wa) }}">
+                        @error('no_wa')
+                            <span class="text-sm" style="color: var(--danger);">{{ $message }}</span>
+                        @enderror
+                    </div>
+                    <div class="form-group">
+                        <label>Nomor Kamar</label>
+                        <input type="text" name="no_kamar" class="form-control" 
+                            value="{{ old('no_kamar', Auth::user()->no_kamar) }}">
+                        @error('no_kamar')
+                            <span class="text-sm" style="color: var(--danger);">{{ $message }}</span>
+                        @enderror
+                    </div>
+                    <div style="margin-top: 24px;">
+                        <button type="submit" class="btn">
+                            <i class="fa-solid fa-save"></i> Simpan Perubahan
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

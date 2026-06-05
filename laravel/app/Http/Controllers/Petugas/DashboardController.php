@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\JadwalPengangkutan;
 use App\Models\SetoranSampah;
 use Illuminate\Support\Facades\Auth;
+USE App\Models\KategoriSampah;
 
 class DashboardController extends Controller
 {
@@ -19,13 +20,23 @@ class DashboardController extends Controller
             ->orderBy('waktu_mulai')
             ->get();
 
-        // Setoran pending (tugas hari ini)
-        $setorans = SetoranSampah::with(['user', 'kategori'])
+        // HANYA setoran pending yang SUDAH dijadwalkan untuk petugas ini
+        $setorans = SetoranSampah::with(['user', 'kategori', 'jadwal'])
             ->where('status', 'pending')
+            ->whereHas('jadwal', function ($query) {
+                $query->where('petugas_id', Auth::id());
+            })
             ->latest()
             ->get();
 
-        return view('Petugas.dashboard', compact('jadwals', 'setorans'));
-    }
+       
+        // Riwayat pengangkutan milik petugas ini
+        $riwayatAngkut = SetoranSampah::with(['user', 'kategori'])
+            ->where('petugas_id', Auth::id())
+            ->whereIn('status', ['diangkut', 'selesai'])
+            ->latest()
+            ->get();
 
+        return view('Petugas.dashboard', compact('jadwals', 'setorans', 'riwayatAngkut'));
+    }
 }
