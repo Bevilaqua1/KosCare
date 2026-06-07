@@ -5,31 +5,6 @@
     <!-- Tab Tugas Hari Ini -->
     <div id="jadwal-petugas" class="tab-content active">
         <!-- Panel Jadwal -->
-        <div class="panel" style="margin-bottom: 24px;">
-            <div class="panel-header">
-                <h3 class="panel-title">Jadwal Penjemputan Saya</h3>
-            </div>
-            <div class="table-responsive">
-                <table>
-                    <thead>
-                        <tr><th>Tanggal</th><th>Waktu</th><th>Keterangan</th></tr>
-                    </thead>
-                    <tbody>
-                        @forelse($jadwals as $jadwal)
-                        <tr>
-                            <td>{{ optional($jadwal->tanggal)->format('d M Y') }}</td>
-                            <td>{{ optional($jadwal->waktu_mulai)->format('H:i') }} - {{ optional($jadwal->waktu_selesai)->format('H:i') }}</td>
-                            <td>{{ $jadwal->keterangan ?? '-' }}</td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="3" style="text-align: center;">Belum ada jadwal untuk Anda.</td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
 
         <!-- Panel Daftar Tugas (setoran pending) -->
         <div class="panel">
