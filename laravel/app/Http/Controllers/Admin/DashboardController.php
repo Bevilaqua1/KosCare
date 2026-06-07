@@ -26,7 +26,8 @@ class DashboardController extends Controller
         $petugasList = User::where('role', 'petugas')->get();
         $rewards = KategoriReward::latest()->get();
         $penukarans = PenukaranPoin::with(['user', 'kategoriReward'])->where('status', 'pending')->latest()->get();
-        $setoransValidasi = SetoranSampah::with(['user', 'kategori', 'jadwal'])->whereIn('status', ['pending', 'diangkut'])->latest()->get();
+        $setoransPending = SetoranSampah::with(['user', 'kategori', 'jadwal'])->where('status', 'pending')->latest()->get();
+        $setoransDiangkut = SetoranSampah::with(['user', 'kategori', 'jadwal'])->where('status', 'diangkut')->latest()->get();
         $artikels = ArtikelEdukasi::latest()->get();
         $pendingValidationCount = SetoranSampah::where('status', 'diangkut')->count();
 // untuk grafik laporan
@@ -60,7 +61,7 @@ class DashboardController extends Controller
 
     return view('Admin.dashboard', compact(
         'kategoris', 'activeTab', 'totalPengguna', 'pendingSetoran', 'totalSampahTerkumpul',
-        'setoransValidasi', 'jadwals', 'petugasList', 'users', 'rewards', 'penukarans','artikels', 
+        'setoransPending', 'setoransDiangkut', 'jadwals', 'petugasList', 'users', 'rewards', 'penukarans','artikels', 
         'chartLabels', 'chartValues', 'pieLabels', 'pieValues', 'pendingValidationCount'
     ));
     }

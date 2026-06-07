@@ -8,6 +8,16 @@
         <i class="fa-solid fa-check-circle"></i> {{ session('success') }}
     </div>
     @endif
+    @if($errors->any())
+    <div style="background: #F8D7DA; color: #842029; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+        <i class="fa-solid fa-exclamation-circle"></i> Terjadi kesalahan:
+        <ul style="margin: 12px 0 0 18px; padding: 0; list-style: disc;">
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+    @endif
 
     <!-- Tab: Ikhtisar Utama -->
     <div id="dash-admin" class="tab-content {{ $activeTab == 'dash-admin' ? 'active' : '' }}">
@@ -48,11 +58,11 @@
             <div class="table-responsive">
                 <table style="margin: 0; width: 100%;">
                     <tbody>
-                        @forelse($setoransValidasi->take(1) as $setoran)
+                        @forelse($setoransDiangkut->take(1) as $setoran)
                         <tr>
                             <td><strong>#{{ $setoran->id }}</strong><br><span class="text-sm">{{ optional($setoran->user)->no_kamar ?? '-' }}</span></td>
                             <td>{{ $setoran->kategori->nama_kategori ?? '-' }}</td>
-                            <td>{{ $setoran->tanggal_setor->format('d M Y') ?? '-' }}</td>
+                            <td>{{ optional($setoran->tanggal_setor)->format('d M Y') ?? '-' }}</td>
                             <td style="text-align: right;">
                                 <button class="btn btn-small"
                                     onclick="switchTab('admin', 'validasi-admin', document.querySelectorAll('#app-admin .menu-item')[1])">
@@ -90,7 +100,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($setoransValidasi as $setoran)
+                        @forelse($setoransDiangkut as $setoran)
                         <tr>
                             <td>
                                 <strong>#{{ $setoran->id }}</strong><br>
@@ -107,43 +117,29 @@
                                 @endif
                             </td>
                             <td>
-                                @if($setoran->status == 'diangkut')
-                                    <form id="verifikasi-form-{{ $setoran->id }}" action="{{ route('admin.setoran.verifikasi', $setoran->id) }}" method="POST" class="form-verifikasi" style="display: flex; align-items: center; gap: 8px;">
-                                        @csrf
-                                        @method('PUT')
-                                        <input type="number" name="berat_aktual" class="form-control" 
-                                            style="width:80px; padding:8px;" step="0.1" required>
-                                        <span>Kg</span>
-                                    </form>
-                                @else
-                                    {{-- Biarkan kosong atau beri placeholder jika perlu --}}
-                                @endif
+                                <form id="verifikasi-form-{{ $setoran->id }}" action="{{ route('admin.setoran.verifikasi', $setoran->id) }}" method="POST" class="form-verifikasi" style="display: flex; align-items: center; gap: 8px;">
+                                    @csrf
+                                    @method('PUT')
+                                    <input type="number" name="berat_aktual" class="form-control" 
+                                        style="width:80px; padding:8px;" step="0.1" required>
+                                    <span>Kg</span>
+                                </form>
                             </td>
                             <td class="action-buttons">
-                                @if($setoran->status == 'pending')
-                                    @if(!$setoran->jadwal_id)
-                                        <button class="btn btn-small btn-outline" onclick="openJadwalSetoranModal({{ $setoran->id }})">
-                                            <i class="fa-solid fa-calendar-plus"></i> Jadwalkan
-                                        </button>
-                                    @else
-                                        <span class="badge badge-info">Sudah Dijadwalkan</span>
-                                    @endif
-
-                                @elseif($setoran->status == 'diangkut')
-                                    <button type="submit" class="btn btn-small" form="verifikasi-form-{{ $setoran->id }}" style="background: var(--primary); margin-right: 8px;">
-                                        <i class="fa-solid fa-check"></i> Setujui
+                                <button type="submit" class="btn btn-small" form="verifikasi-form-{{ $setoran->id }}" style="background: var(--primary); margin-right: 8px;">
+                                    <i class="fa-solid fa-check"></i> Setujui
+                                </button>
+                                <form action="{{ route('admin.setoran.tolak', $setoran->id) }}" method="POST" style="display:inline;">
+                                    @csrf @method('PUT')
+                                    <button type="submit" class="btn btn-small btn-danger btn-icon" title="Tolak">
+                                        <i class="fa-solid fa-xmark"></i>
                                     </button>
-                                    <form action="{{ route('admin.setoran.tolak', $setoran->id) }}" method="POST" style="display:inline;">
-                                        @csrf @method('PUT')
-                                        <button type="submit" class="btn btn-small btn-danger btn-icon" title="Tolak">
-                                            <i class="fa-solid fa-xmark"></i>
-                                        </button>
-                                    </form>
-                                @endif
+                                </form>
                             </td>
+                        </tr>
                         @empty
                         <tr>
-                            <td colspan="5" style="text-align: center;">Tidak ada setoran yang perlu divalidasi.</td>
+                            <td colspan="5" style="text-align: center;">Tidak ada setoran untuk divalidasi.</td>
                         </tr>
                         @endforelse
                     </tbody>
@@ -205,44 +201,41 @@
     <div id="jadwal-admin" class="tab-content {{ $activeTab == 'jadwal-admin' ? 'active' : '' }}">
         <div class="panel">
             <div class="panel-header">
-                <h3 class="panel-title">Manajemen Jadwal</h3>
-                <button class="btn btn-small" onclick="openJadwalModal()">
-                    <i class="fa-solid fa-plus"></i> Tambah Jadwal
-                </button>
+                <h3 class="panel-title">Kelola Jadwal</h3>
+                <div class="text-sm">Jadwalkan penjemputan untuk setoran yang masih pending.</div>
             </div>
             <div class="table-responsive">
                 <table>
                     <thead>
                         <tr>
-                            <th>Tanggal</th>
-                            <th>Waktu</th>
-                            <th>Petugas</th>
-                            <th>Keterangan</th>
+                            <th>ID & Penghuni</th>
+                            <th>Kategori</th>
+                            <th>Estimasi</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($jadwals as $jadwal)
+                        @forelse($setoransPending as $setoran)
                         <tr>
-                            <td>{{ optional($jadwal->tanggal)->format('d M Y') }}</td>
-                            <td>{{ optional($jadwal->waktu_mulai)->format('H:i') }} - {{ optional($jadwal->waktu_selesai)->format('H:i') }}</td>
-                            <td>{{ optional($jadwal->petugas)->name ?? 'Belum ditugaskan' }}</td>
-                            <td>{{ $jadwal->keterangan ?? '-' }}</td>
+                            <td>
+                                <strong>#{{ $setoran->id }}</strong><br>
+                                <span class="text-sm">{{ optional($setoran->user)->no_kamar ?? '-' }} ({{ optional($setoran->user)->name ?? 'Tidak Dikenal' }})</span>
+                            </td>
+                            <td><span class="badge badge-info">{{ $setoran->kategori->nama_kategori ?? '-' }}</span></td>
+                            <td>{{ $setoran->estimasi_berat ?? '-' }} Kg</td>
                             <td class="action-buttons">
-                                <button class="btn btn-small btn-outline btn-icon" onclick="editJadwal({{ $jadwal->id }})">
-                                    <i class="fa-solid fa-pen"></i>
-                                </button>
-                                <form action="{{ route('admin.jadwal.destroy', $jadwal->id) }}" method="POST" style="display:inline">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="btn btn-small btn-danger btn-icon" onclick="return confirm('Yakin hapus jadwal?')">
-                                        <i class="fa-solid fa-trash"></i>
+                                @if(!$setoran->jadwal_id)
+                                    <button class="btn btn-small btn-outline" onclick="openJadwalSetoranModal({{ $setoran->id }})">
+                                        <i class="fa-solid fa-calendar-plus"></i> Jadwalkan
                                     </button>
-                                </form>
+                                @else
+                                    <span class="badge badge-info">Sudah Dijadwalkan</span>
+                                @endif
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="5" style="text-align: center;">Belum ada jadwal pengangkutan.</td>
+                            <td colspan="4" style="text-align: center;">Tidak ada setoran pending.</td>
                         </tr>
                         @endforelse
                     </tbody>
@@ -326,6 +319,39 @@
                 </div>
             </div>
         </div>
+
+    <!-- Modal Reward -->
+    <div id="rewardModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+                background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
+        <div style="background:white; border-radius:16px; width:90%; max-width:540px; padding:32px;
+                    box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+            <h3 style="margin-top:0;" id="rewardModalTitle">Tambah Item Reward</h3>
+            <form id="rewardForm" method="POST">
+                @csrf
+                <div id="rewardMethodField"></div>
+                <div class="form-group">
+                    <label>Nama Item</label>
+                    <input type="text" name="nama_item" id="reward_nama_item" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Deskripsi</label>
+                    <textarea name="deskripsi" id="reward_deskripsi" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Poin Diperlukan</label>
+                    <input type="number" name="poin_diperlukan" id="reward_poin_diperlukan" class="form-control" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label>Stok</label>
+                    <input type="number" name="stok" id="reward_stok" class="form-control" min="0" required>
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
+                    <button type="button" class="btn btn-outline" style="width:auto;" onclick="closeRewardModal()">Batal</button>
+                    <button type="submit" class="btn" style="width:auto;">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
 <!-- Tab: Kelola Artikel -->
     <div id="artikel-admin" class="tab-content {{ $activeTab == 'artikel-admin' ? 'active' : '' }}">
@@ -577,7 +603,7 @@
 
             document.getElementById('modalTitle').innerText = 'Edit Kategori';
             document.getElementById('kategoriForm').action = `/admin/kategori/${data.id}`;
-            document.getElementById('methodField').innerHTML = '@csrf @method('PUT')';
+            document.getElementById('methodField').innerHTML = `@csrf @method('PUT')`;
             document.getElementById('nama_kategori').value = data.nama_kategori;
             document.getElementById('deskripsi').value = data.deskripsi || '';
             document.getElementById('poin_per_kg').value = data.poin_per_kg;
@@ -623,7 +649,8 @@
 
             document.getElementById('jadwalModalTitle').innerText = 'Edit Jadwal';
             document.getElementById('jadwalForm').action = `/admin/jadwal/${data.id}`;
-            document.getElementById('jadwalMethodField').innerHTML = '@csrf @method('PUT')';
+            document.getElementById('jadwalMethodField').innerHTML = `@csrf @method('PUT')`;
+
             document.getElementById('jadwal_tanggal').value = data.tanggal;
             document.getElementById('jadwal_waktu_mulai').value = data.waktu_mulai ? data.waktu_mulai.substring(0,5) : '';
             document.getElementById('jadwal_waktu_selesai').value = data.waktu_selesai ? data.waktu_selesai.substring(0,5) : '';
@@ -647,13 +674,13 @@
 
 // ----- Modal Jadwal Setoran -----
     function openJadwalSetoranModal(setoranId) {
-            document.getElementById('jadwalSetoranForm').action = `/admin/setoran/${setoranId}/jadwalkan`;
-            document.getElementById('tanggal_jemput').value = '';
-            document.getElementById('waktu_mulai_jemput').value = '';
-            document.getElementById('waktu_selesai_jemput').value = '';
-            document.getElementById('petugas_id_jemput').value = '';
-            document.getElementById('keterangan_jemput').value = '';
-            document.getElementById('jadwalSetoranModal').style.display = 'flex';
+               document.getElementById('jadwalSetoranForm').action = `/admin/setoran/${setoranId}/jadwalkan`;
+                document.getElementById('tanggal_jemput').value = '';
+                document.getElementById('waktu_mulai_jemput').value = '';
+                document.getElementById('waktu_selesai_jemput').value = '';
+                document.getElementById('petugas_id_jemput').value = '';
+                document.getElementById('keterangan_jemput').value = '';
+                document.getElementById('jadwalSetoranModal').style.display = 'flex';
         }
 
         function closeJadwalSetoranModal() {
@@ -665,6 +692,52 @@
                 closeJadwalSetoranModal();
             }
         });
+
+    // ----- Modal Reward -----
+    function openRewardModal() {
+        document.getElementById('rewardModalTitle').innerText = 'Tambah Item Reward';
+        document.getElementById('rewardForm').action = "{{ route('admin.reward.store') }}";
+        document.getElementById('rewardMethodField').innerHTML = '';
+        document.getElementById('reward_nama_item').value = '';
+        document.getElementById('reward_deskripsi').value = '';
+        document.getElementById('reward_poin_diperlukan').value = '';
+        document.getElementById('reward_stok').value = '';
+        document.getElementById('rewardModal').style.display = 'flex';
+    }
+
+    async function editReward(id) {
+        try {
+            const response = await fetch(`/admin/reward/${id}/edit`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            });
+            if (!response.ok) throw new Error('Gagal mengambil data');
+            const data = await response.json();
+
+            document.getElementById('rewardModalTitle').innerText = 'Edit Item Reward';
+            document.getElementById('rewardForm').action = `/admin/reward/${data.id}`;
+            document.getElementById('rewardMethodField').innerHTML = `@csrf @method('PUT')`;
+            document.getElementById('reward_nama_item').value = data.nama_item;
+            document.getElementById('reward_deskripsi').value = data.deskripsi || '';
+            document.getElementById('reward_poin_diperlukan').value = data.poin_diperlukan;
+            document.getElementById('reward_stok').value = data.stok;
+            document.getElementById('rewardModal').style.display = 'flex';
+        } catch (error) {
+            alert('Terjadi kesalahan: ' + error.message);
+        }
+    }
+
+    function closeRewardModal() {
+        document.getElementById('rewardModal').style.display = 'none';
+    }
+
+    document.getElementById('rewardModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeRewardModal();
+        }
+    });
 // ----- Modal Artikel -----
     function openArtikelModal() {
             document.getElementById('artikelModalTitle').innerText = 'Tulis Artikel';
@@ -687,7 +760,7 @@
 
                 document.getElementById('artikelModalTitle').innerText = 'Edit Artikel';
                 document.getElementById('artikelForm').action = `/admin/artikel/${data.id}`;
-                document.getElementById('artikelMethodField').innerHTML = '@csrf @method('PUT')';
+                document.getElementById('artikelMethodField').innerHTML = `@csrf @method('PUT')`;
                 document.getElementById('artikel_judul').value = data.judul;
                 document.getElementById('artikel_isi').value = data.isi;
                 document.getElementById('artikel_tanggal').value = data.tanggal_terbit; // sudah diformat Y-m-d dari controller

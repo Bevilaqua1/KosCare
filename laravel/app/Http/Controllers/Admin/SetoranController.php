@@ -15,7 +15,8 @@ class SetoranController extends Controller
         $setoransValidasi = SetoranSampah::with(['user', 'kategori', 'jadwal'])
     ->whereIn('status', ['pending', 'diangkut'])
     ->latest()
-    ->get();    
+    ->get();
+    return redirect()->route('admin.dashboard', ['tab' => 'validasi-admin']);    
     }
 
     // Method ini akan dipanggil dari dashboard admin (tab validasi)
@@ -25,7 +26,7 @@ class SetoranController extends Controller
     public function verifikasi(Request $request, SetoranSampah $setoran)
     {
         $request->validate([
-            'berat_aktual' => 'required|numeric|min:0.1',
+            'berat_aktual' => 'required|numeric|min:0',
         ]);
 
         $berat = $request->berat_aktual;
@@ -79,7 +80,7 @@ class SetoranController extends Controller
     public function jadwalkan(Request $request, SetoranSampah $setoran)
     {
         $request->validate([
-            'tanggal_jemput' => 'required|date|after:today',
+            // 'tanggal_jemput' => 'required|date|after_or_equal:today',
             'waktu_mulai' => 'required',
             'waktu_selesai' => 'required|after:waktu_mulai',
             'petugas_id' => 'required|exists:users,id',

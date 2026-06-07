@@ -88,6 +88,7 @@ Route::middleware(['auth', 'admin'])
             ->name('setoran.jadwalkan');
         Route::post('/setoran/{setoran}/jadwalkan', [App\Http\Controllers\Admin\SetoranController::class, 'jadwalkan'])
             ->name('setoran.jadwalkan.submit');
+            
         Route::resource('jadwal', App\Http\Controllers\Admin\JadwalController::class);
 
         Route::resource('artikel', App\Http\Controllers\Admin\ArtikelController::class);

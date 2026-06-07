@@ -21,16 +21,16 @@
                 <li class="menu-item active" onclick="switchTab('admin', 'dash-admin', this)">
                     <i class="fa-solid fa-chart-pie"></i> Ikhtisar Utama
                 </li>
-                <li class="menu-item" onclick="switchTab('admin', 'validasi-admin', this)">
+                <li class="menu-item {{ $activeTab == 'validasi-admin' ? 'active' : '' }}" onclick="switchTab('admin', 'validasi-admin', this)">
                     <i class="fa-solid fa-list-check"></i> Validasi Setoran
                     @if($pendingValidationCount > 0)
                         <span class="badge">{{ $pendingValidationCount }}</span>
                     @endif
                 </li>
-                <li class="menu-item" onclick="switchTab('admin', 'kategori-admin', this)">
+                <li class="menu-item {{ $activeTab == 'kategori-admin' ? 'active' : '' }}" onclick="switchTab('admin', 'kategori-admin', this)">
                     <i class="fa-solid fa-tags"></i> Kelola Kategori
                 </li>
-                <li class="menu-item" onclick="switchTab('admin', 'jadwal-admin', this)">
+                <li class="menu-item {{ $activeTab == 'jadwal-admin' ? 'active' : '' }}" onclick="switchTab('admin', 'jadwal-admin', this)">
                     <i class="fa-solid fa-calendar-days"></i> Kelola Jadwal
                 </li>
                 <li class="menu-item {{ $activeTab == 'reward-admin' ? 'active' : '' }}" 
