@@ -59,12 +59,22 @@
 </div>
 
     {{-- ===================== TAB AJUKAN SETORAN ===================== --}}
-    <div id="setor-penghuni" class="tab-content">
+    <div id="setor-penghuni" class="tab-content {{ $activeTab == 'setor-penghuni' ? 'active' : '' }}">
         <div class="panel" style="max-width: 700px; margin: 0 auto;">
             <div class="panel-header">
                 <h3 class="panel-title">Form Ajukan Setoran</h3>
             </div>
             <div class="panel-body">
+                @if(session('success'))
+                    <div style="background: var(--success-bg); color: var(--primary-dark); padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                        <i class="fa-solid fa-check-circle"></i> {{ session('success') }}
+                    </div>
+                @endif
+                @if(session('error'))
+                    <div style="background: #fee2e2; color: var(--danger); padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                        <i class="fa-solid fa-exclamation-circle"></i> {{ session('error') }}
+                    </div>
+                @endif
                 <form action="{{ route('resident.setoran.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="form-group">
@@ -158,7 +168,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="4" style="text-align: center;">Belum ada jadwal pengangkutan.</td>
+                            <td colspan="4" style="text-align: center;">Belum ada jadwal penjemputan untuk setoran Anda.</td>
                         </tr>
                         @endforelse
                     </tbody>

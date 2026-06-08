@@ -397,9 +397,60 @@
     </div>
 
 <!-- Tab: Kelola Pengguna -->
-    <div id="pengguna-admin" class="tab-content {{ $activeTab == 'pengguna-admin' ? 'active' : '' }}">
-        {{-- ... --}}
+<div id="pengguna-admin" class="tab-content {{ $activeTab == 'pengguna-admin' ? 'active' : '' }}">
+    <div class="panel">
+        <div class="panel-header">
+            <h3 class="panel-title">Manajemen Pengguna</h3>
+            <button class="btn btn-small" onclick="openUserModal()">
+                <i class="fa-solid fa-user-plus"></i> Tambah Akun
+            </button>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nama</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>No. Kamar</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($users as $user)
+                    <tr>
+                        <td><strong>{{ $user->name }}</strong></td>
+                        <td>{{ $user->email }}</td>
+                        <td>
+                            <span class="badge {{ $user->role == 'admin' ? 'badge-info' : ($user->role == 'petugas' ? 'badge-warning' : 'badge-success') }}">
+                                {{ ucfirst($user->role) }}
+                            </span>
+                        </td>
+                        <td>{{ $user->no_kamar ?? '-' }}</td>
+                        <td class="action-buttons">
+                            <button class="btn btn-small btn-outline btn-icon" onclick="editUser({{ $user->id }})">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>   
+                            @if($user->id !== auth()->id())
+                            <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" style="display:inline">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="btn btn-small btn-danger btn-icon" onclick="return confirm('Yakin hapus pengguna ini?')">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </form>
+                            @endif
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="5" style="text-align: center;">Belum ada data pengguna.</td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
+</div>
 
  <!-- Tab: Laporan -->
     <div id="laporan-admin" class="tab-content {{ $activeTab == 'laporan-admin' ? 'active' : '' }}">
@@ -579,6 +630,62 @@
         </div>
     </div>
 
+ <!-- Modal Pengguna -->
+<div id="userModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
+            background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
+    <div style="background:white; border-radius:16px; width:90%; max-width:500px; padding:0; 
+                box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+        <div style="padding:32px; max-height:80vh; overflow-y:auto;">
+            <h3 style="margin-top:0;" id="userModalTitle">Tambah Akun</h3>
+            <form id="userForm" method="POST">
+                @csrf
+                <div id="userMethodField"></div>
+                <div class="form-group">
+                    <label>Nama</label>
+                    <input type="text" name="name" id="user_name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" id="user_email" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" id="user_password" class="form-control">
+                    <span class="text-sm">Kosongkan jika tidak ingin mengubah password.</span>
+                </div>
+                <div class="form-group">
+                    <label>Role</label>
+                    <select name="role" id="user_role" class="form-control" required>
+                        <option value="resident">Resident</option>
+                        <option value="petugas">Petugas</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>No. WA</label>
+                    <input type="text" name="no_wa" id="user_no_wa" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>No. Kamar</label>
+                    <input type="text" name="no_kamar" id="user_no_kamar" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Nama Kos</label>
+                    <input type="text" name="nama_kos" id="user_nama_kos" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Alamat Kos</label>
+                    <input type="text" name="alamat_kos" id="user_alamat_kos" class="form-control">
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
+                    <button type="button" class="btn btn-outline" style="width:auto;" onclick="closeUserModal()">Batal</button>
+                    <button type="submit" class="btn" style="width:auto;">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
@@ -742,6 +849,61 @@
             closeRewardModal();
         }
     });
+
+// ----- Modal Pengguna -----
+function openUserModal() {
+    document.getElementById('userModalTitle').innerText = 'Tambah Akun';
+    document.getElementById('userForm').action = "{{ route('admin.users.store') }}";
+    document.getElementById('userMethodField').innerHTML = '';
+    document.getElementById('user_name').value = '';
+    document.getElementById('user_email').value = '';
+    document.getElementById('user_password').value = '';
+    document.getElementById('user_role').value = 'resident';
+    document.getElementById('user_no_wa').value = '';
+    document.getElementById('user_no_kamar').value = '';
+    document.getElementById('user_nama_kos').value = '';
+    document.getElementById('user_alamat_kos').value = '';
+    document.getElementById('userModal').style.display = 'flex';
+}
+
+async function editUser(id) {
+    try {
+        const response = await fetch(`/admin/users/${id}/edit`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        });
+        if (!response.ok) throw new Error('Gagal mengambil data');
+        const data = await response.json();
+
+        document.getElementById('userModalTitle').innerText = 'Edit Akun';
+        document.getElementById('userForm').action = `/admin/users/${data.id}`;
+        document.getElementById('userMethodField').innerHTML = `@csrf @method('PUT')`;
+        document.getElementById('user_name').value = data.name;
+        document.getElementById('user_email').value = data.email;
+        document.getElementById('user_password').value = '';
+        document.getElementById('user_role').value = data.role;
+        document.getElementById('user_no_wa').value = data.no_wa || '';
+        document.getElementById('user_no_kamar').value = data.no_kamar || '';
+        document.getElementById('user_nama_kos').value = data.nama_kos || '';
+        document.getElementById('user_alamat_kos').value = data.alamat_kos || '';
+        document.getElementById('userModal').style.display = 'flex';
+    } catch (error) {
+        alert('Terjadi kesalahan: ' + error.message);
+    }
+}
+
+function closeUserModal() {
+    document.getElementById('userModal').style.display = 'none';
+}
+
+document.getElementById('userModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeUserModal();
+    }
+});
+    
 // ----- Modal Artikel -----
     function openArtikelModal() {
             document.getElementById('artikelModalTitle').innerText = 'Tulis Artikel';

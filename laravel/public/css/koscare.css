@@ -41,13 +41,19 @@
             -webkit-font-smoothing: antialiased;
         }
 
+        html {
+            height: 100%;
+            overflow: hidden;
+        }
+
         body {
             background-color: var(--bg-body);
             color: var(--text-main);
+            height: 100%;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow-x: hidden;
+            overflow: hidden;
         }
 
         .hidden { display: none !important; }
@@ -58,9 +64,11 @@
         .auth-screen {
             display: flex;
             min-height: 100vh;
+            height: 100vh;
             width: 100vw;
-            position: relative; /* allow page scrolling to move both columns */
+            position: hidden; /* allow page scrolling to move both columns */
             background-color: var(--bg-surface);
+            overflow: hidden;
         }
 
         .auth-visual {
@@ -73,7 +81,7 @@
             color: white;
             padding: 40px;
             position: relative;
-            overflow: visible;
+            overflow: hidden;
         }
         
         /* Decorative circles in background */
@@ -83,7 +91,7 @@
         .auth-visual::before { width: 400px; height: 400px; top: -100px; left: -100px; }
         .auth-visual::after { width: 600px; height: 600px; bottom: -200px; right: -100px; }
 
-        .auth-visual h1 { font-size: 48px; font-weight: 800; margin-bottom: 20px; z-index: 1; display: flex; align-items: center; gap: 15px;}
+        .auth-visual h1 { font-size: 48px; font-weight: 800; margin-bottom: 20px; z-index: 1; display: flex; align-items: center; gap: 15px;overflow:hidden;}
         .auth-visual p { font-size: 18px; text-align: center; max-width: 400px; line-height: 1.6; color: var(--primary-light); z-index: 1;}
         .auth-logo { margin-bottom: 24px; z-index: 1; }
         .auth-logo img { width: 140px; max-width: 100%; display: block; }
@@ -95,6 +103,7 @@
             align-items: center;
             justify-content: center;
             background: var(--bg-body);
+            overflow-y: auto;
         }
 
         .auth-box {
@@ -450,6 +459,11 @@
         }
 
         @media (max-width: 768px) {
+            html, body {
+                overflow: visible;
+                height: auto;
+            }
+
             .auth-screen {
                 flex-direction: column;
                 position: relative;

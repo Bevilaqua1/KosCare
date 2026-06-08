@@ -29,20 +29,22 @@ class DashboardController extends Controller
         $totalSetoran = $riwayatSetoran->count();
         $totalPoin = $riwayatSetoran->sum('poin_didapat');
 
-        // Semua jadwal (untuk tab Jadwal Angkut)
-        $jadwals = JadwalPengangkutan::with('petugas')
-            ->whereHas('setorans', function ($query) {
-                $query->where('user_id', Auth::id());
+        // Semua jadwal (untuk tab Jadwal Angkut) - hanya jadwal yang terkait dengan setoran user saat ini dan status pending
+        $jadwals = JadwalPengangkutan::whereHas('setorans', function ($q) {
+            $q->where('user_id', Auth::id())
+              ->where('status', 'pending');
             })
+            ->with('petugas')
             ->orderBy('tanggal')
             ->orderBy('waktu_mulai')
             ->get();
 
-        // Jadwal terdekat (untuk kartu Ikhtisar)
-        $jadwalTerdekat = JadwalPengangkutan::with('petugas')
-            ->whereHas('setorans', function ($query) {
-                $query->where('user_id', Auth::id());
+        // Jadwal terdekat (untuk kartu Ikhtisar) - hanya jadwal dari setoran user dengan status pending dan tanggal hari ini atau setelahnya
+        $jadwalTerdekat = JadwalPengangkutan::whereHas('setorans', function ($q) {
+            $q->where('user_id', Auth::id())
+              ->where('status', 'pending');
             })
+            ->with('petugas')
             ->where('tanggal', '>=', Carbon::today())
             ->orderBy('tanggal')
             ->orderBy('waktu_mulai')
@@ -60,8 +62,8 @@ class DashboardController extends Controller
 
 
         return view('Resident.dashboard', compact(
-            'kategoris',
             'activeTab',
+            'kategoris',
             'riwayatSetoran',
             'totalSetoran',
             'totalPoin',

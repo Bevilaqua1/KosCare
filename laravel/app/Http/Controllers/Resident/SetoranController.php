@@ -7,6 +7,8 @@ use App\Models\SetoranSampah;
 use App\Models\KategoriSampah;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 
 class SetoranController extends Controller
 {
@@ -20,12 +22,18 @@ class SetoranController extends Controller
     // Menyimpan pengajuan baru
     public function store(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'kategori_id' => 'required|exists:kategori_sampah,id',
             'estimasi_berat' => 'nullable|numeric|min:0.1',
             'tanggal_setor' => 'required|date',
             'foto' => 'required|image|mimes:jpeg,png,jpg|max:5120', // max 5MB
         ]);
+
+        if ($validator->fails()) {
+            return redirect()->route('resident.dashboard', ['tab' => 'setor-penghuni'])
+                            ->withErrors($validator)
+                            ->withInput();
+        }
 
         // Upload foto
         $fotoPath = null;
@@ -43,7 +51,7 @@ class SetoranController extends Controller
             'status' => 'pending',
         ]);
 
-        return redirect()->route('resident.dashboard', ['tab' => 'riwayat-penghuni'])
+        return redirect()->route('resident.dashboard', ['tab' => 'setor-penghuni'])
             ->with('success', 'Setoran berhasil diajukan! Menunggu petugas mengambil sampah Anda.');
     }
 }
