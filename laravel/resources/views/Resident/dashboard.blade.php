@@ -9,43 +9,54 @@
     </div>
     @endif
 
-    {{-- ===================== TAB IKHtisar ===================== --}}
-    <div id="dash-penghuni" class="tab-content {{ $activeTab == 'dash-penghuni' ? 'active' : '' }}">
-        <div class="card-grid">
-            <div class="card">
-                <div class="card-icon"><i class="fa-solid fa-box-open"></i></div>
-                <div class="card-info">
-                    <h3>Total Sampah Disetor</h3>
-                    <div class="value">{{ $totalSetoran }}<span style="font-size:16px; font-weight:600; color:var(--text-muted); margin-left:4px;">Kali</span></div>
-                </div>
+    <!-- {{-- ===================== TAB IKHtisar ===================== --}} -->
+<div id="dash-penghuni" class="tab-content {{ $activeTab == 'dash-penghuni' ? 'active' : '' }}">
+    <div class="card-grid">
+        {{-- Kartu Nama Kos --}}
+        <div class="card">
+            <div class="card-icon"><i class="fa-solid fa-house"></i></div>
+            <div class="card-info">
+                <h3>Nama Kos</h3>
+                <div class="value">{{ Auth::user()->nama_kos ?? 'Belum diisi' }}</div>
             </div>
-            <div class="card">
-                <div class="card-icon" style="background:var(--warning-bg); color:#D97706;">
-                    <i class="fa-solid fa-coins"></i>
-                </div>
-                <div class="card-info">
-                    <h3>Saldo Poin</h3>
-                    <div class="value">{{ $totalPoin }}<span style="font-size:16px; font-weight:600; color:var(--text-muted); margin-left:4px;">Pts</span></div>
-                </div>
+        </div>
+        {{-- Kartu Total Sampah Disetor --}}
+        <div class="card">
+            <div class="card-icon"><i class="fa-solid fa-box-open"></i></div>
+            <div class="card-info">
+                <h3>Total Sampah Disetor</h3>
+                <div class="value">{{ $totalSetoran }}<span style="font-size:16px; font-weight:600; color:var(--text-muted); margin-left:4px;">Kali</span></div>
             </div>
-            <div class="card">
-                <div class="card-icon" style="background:var(--info-bg); color:var(--info);">
-                    <i class="fa-solid fa-truck-fast"></i>
-                </div>
-                <div class="card-info">
-                    <h3>Jadwal Jemput Terdekat</h3>
-                    <div class="value" style="font-size: 24px;">
-                        @if($jadwalTerdekat)
-                            {{ optional($jadwalTerdekat->tanggal)->format('d M Y') }},
-                            {{ optional($jadwalTerdekat->waktu_mulai)->format('H:i') }}
-                        @else
-                            Belum ada jadwal
-                        @endif
-                    </div>
+        </div>
+        {{-- Kartu Saldo Poin --}}
+        <div class="card">
+            <div class="card-icon" style="background:var(--warning-bg); color:#D97706;">
+                <i class="fa-solid fa-coins"></i>
+            </div>
+            <div class="card-info">
+                <h3>Saldo Poin</h3>
+                <div class="value">{{ $totalPoin }}<span style="font-size:16px; font-weight:600; color:var(--text-muted); margin-left:4px;">Pts</span></div>
+            </div>
+        </div>
+        {{-- Kartu Jadwal Jemput Terdekat --}}
+        <div class="card">
+            <div class="card-icon" style="background:var(--info-bg); color:var(--info);">
+                <i class="fa-solid fa-truck-fast"></i>
+            </div>
+            <div class="card-info">
+                <h3>Jadwal Jemput Terdekat</h3>
+                <div class="value" style="font-size: 24px;">
+                    @if($jadwalTerdekat)
+                        {{ optional($jadwalTerdekat->tanggal)->format('d M Y') }},
+                        {{ optional($jadwalTerdekat->waktu_mulai)->format('H:i') }}
+                    @else
+                        Belum ada jadwal
+                    @endif
                 </div>
             </div>
         </div>
     </div>
+</div>
 
     {{-- ===================== TAB AJUKAN SETORAN ===================== --}}
     <div id="setor-penghuni" class="tab-content">
@@ -331,6 +342,22 @@
                         <input type="text" name="no_kamar" class="form-control" 
                             value="{{ old('no_kamar', Auth::user()->no_kamar) }}">
                         @error('no_kamar')
+                            <span class="text-sm" style="color: var(--danger);">{{ $message }}</span>
+                        @enderror
+                    </div>
+                    <div class="form-group">
+                        <label>Nama Kos</label>
+                        <input type="text" name="nama_kos" class="form-control" 
+                            value="{{ old('nama_kos', Auth::user()->nama_kos) }}" required>
+                        @error('nama_kos')
+                            <span class="text-sm" style="color: var(--danger);">{{ $message }}</span>
+                        @enderror
+                    </div>
+                    <div class="form-group">
+                        <label>Alamat Kos</label>
+                        <input type="text" name="alamat_kos" class="form-control" 
+                            value="{{ old('alamat_kos', Auth::user()->alamat_kos) }}" required>
+                        @error('alamat_kos')
                             <span class="text-sm" style="color: var(--danger);">{{ $message }}</span>
                         @enderror
                     </div>

@@ -16,7 +16,7 @@
         <!-- Sidebar -->
         <div class="sidebar">
             <div class="sidebar-header">
-                <h2><i class="fa-solid fa-leaf"></i> KosCare</h2>
+                <h2><img src="{{ asset('image/koscare-logo.jpeg') }}" alt="KosCare Logo"> KosCare</h2>
                 <span>Akses Penghuni</span>
             </div>
             <ul class="menu-list">
@@ -58,6 +58,9 @@
         <!-- Main Content -->
         <div class="main-content">
             <div class="topbar">
+                <button class="topbar-toggle" onclick="toggleSidebar('penghuni')" aria-label="Buka menu">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
                 <div class="topbar-title" id="title-penghuni">@yield('page-title', 'Ikhtisar Dashboard')</div>
                 <div class="topbar-actions">
                     <div class="notification-btn">
@@ -70,7 +73,8 @@
                         </div>
                         <div class="user-info">
                             <span class="user-name">{{ Auth::user()->name }}</span>
-                            <span class="user-role">Kamar {{ Auth::user()->no_kamar ?? '-' }}</span>
+                            <span class="user-role">{{ Auth::user()->nama_kos ?? 'Kos Tidak Diketahui' }}</span>
+                            <span class="text-sm">{{ Auth::user()->alamat_kos ?? 'Alamat belum diisi' }}</span>
                         </div>
                         <i class="fa-solid fa-chevron-down" style="color: var(--text-light); margin-left: 8px; font-size: 12px;"></i>
                     </div>
@@ -82,8 +86,19 @@
             </div>
         </div>
     </div>
+    <div class="sidebar-backdrop" id="penghuniSidebarBackdrop" onclick="toggleSidebar('penghuni')"></div>
 
     <script>
+        function toggleSidebar(role) {
+            const app = document.getElementById('app-' + role);
+            if (!app) return;
+            const sidebar = app.querySelector('.sidebar');
+            const backdrop = document.getElementById(role + 'SidebarBackdrop');
+            if (!sidebar || !backdrop) return;
+            sidebar.classList.toggle('show');
+            backdrop.classList.toggle('show');
+        }
+
         function switchTab(role, tabId, element) {
             const app = document.getElementById('app-' + role);
             

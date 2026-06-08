@@ -4,7 +4,10 @@
 @section('content')
 <div class="auth-screen">
     <div class="auth-visual">
-        <h1><i class="fa-solid fa-leaf"></i> KosCare</h1>
+        <div class="auth-logo">
+            <img src="{{ asset('image/koscare-logo.jpeg') }}" alt="KosCare Logo">
+        </div>
+        <h1>KosCare</h1>
         <p>Platform pintar untuk mengelola bank sampah di lingkungan kos Anda. Mulai langkah kecil untuk bumi yang lebih bersih.</p>
     </div>
     <div class="auth-form-container">

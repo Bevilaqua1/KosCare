@@ -19,6 +19,8 @@ class ResidentSeeder extends Seeder
                 'role' => 'resident',
                 'no_wa' => '0812000001',
                 'no_kamar' => 'A-101',
+                'nama_kos' => 'Kos Melati',
+                'alamat_kos' => 'Jl. Mendalo Indah No.12',
             ],
         ];
 

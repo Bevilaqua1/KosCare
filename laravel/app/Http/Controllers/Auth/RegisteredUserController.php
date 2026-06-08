@@ -35,6 +35,8 @@ class RegisteredUserController extends Controller
         'email' => ['required', 'string', 'email', 'max:255', 'unique:'.User::class],
         'password' => ['required', 'confirmed', Rules\Password::defaults()],
         'no_kamar' => ['required', 'string', 'max:100'],
+        'nama_kos' => ['required', 'string', 'max:255'],
+        'alamat_kos' => ['required', 'string', 'max:255'],
         // no_wa juga bisa ditambahkan jika diperlukan
     ]);
 
@@ -44,10 +46,12 @@ class RegisteredUserController extends Controller
         'password' => Hash::make($request->password),
         'role' => 'resident',
         'no_kamar' => $request->no_kamar,
-        // 'no_wa' => $request->no_wa, // jika ada
+        'nama_kos' => $request->nama_kos,
+        'alamat_kos' => $request->alamat_kos,
     ]);
 
     event(new Registered($user));
+
     Auth::login($user);
 
     return redirect()->route('resident.dashboard');

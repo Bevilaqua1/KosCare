@@ -4,7 +4,10 @@
 @section('content')
 <div class="auth-screen">
     <div class="auth-visual">
-        <h1><i class="fa-solid fa-seedling"></i> Mari Bergabung</h1>
+        <div class="auth-logo">
+            <img src="{{ asset('image/koscare-logo.jpeg') }}" alt="KosCare Logo">
+        </div>
+        <h1>Gabung dengan KosCare</h1>
         <p>Jadilah bagian dari komunitas hijau. Tukarkan sampah Anda menjadi poin yang bermanfaat.</p>
     </div>
     <div class="auth-form-container">
@@ -15,7 +18,7 @@
             <form method="POST" action="{{ route('register') }}">
                 @csrf
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="auth-grid-two-column">
                     <div class="form-group">
                         <label for="name">Nama Lengkap</label>
                         <input id="name" type="text" class="form-control @error('name') is-invalid @enderror" 
@@ -31,6 +34,26 @@
                                name="no_kamar" value="{{ old('no_kamar') }}" required 
                                placeholder="Cth: B4">
                         @error('no_kamar')
+                            <span class="text-sm" style="color: var(--danger);">{{ $message }}</span>
+                        @enderror
+                    </div>
+                </div>
+                <div class="auth-grid-two-column">
+                    <div class="form-group">
+                        <label for="nama_kos">Nama Kos</label>
+                        <input id="nama_kos" type="text" class="form-control @error('nama_kos') is-invalid @enderror"
+                               name="nama_kos" value="{{ old('nama_kos') }}" required 
+                               placeholder="Cth: Kos Melati">
+                        @error('nama_kos')
+                            <span class="text-sm" style="color: var(--danger);">{{ $message }}</span>
+                        @enderror
+                    </div>
+                    <div class="form-group">
+                        <label for="alamat_kos">Alamat Kos</label>
+                        <input id="alamat_kos" type="text" class="form-control @error('alamat_kos') is-invalid @enderror"
+                               name="alamat_kos" value="{{ old('alamat_kos') }}" required 
+                               placeholder="Cth: Jl. Mendalo Indah No.12">
+                        @error('alamat_kos')
                             <span class="text-sm" style="color: var(--danger);">{{ $message }}</span>
                         @enderror
                     </div>

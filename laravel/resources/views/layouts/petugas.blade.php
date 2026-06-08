@@ -13,7 +13,7 @@
         <!-- Sidebar -->
         <div class="sidebar">
             <div class="sidebar-header">
-                <h2><i class="fa-solid fa-truck-fast"></i> KosCare</h2>
+                <h2><img src="{{ asset('image/koscare-logo.jpeg') }}" alt="KosCare Logo"> KosCare</h2>
                 <span style="background: var(--warning-bg); color: #B45309;">Akses Petugas</span>
             </div>
             <ul class="menu-list">
@@ -37,6 +37,9 @@
         <!-- Main Content -->
         <div class="main-content">
             <div class="topbar">
+                <button class="topbar-toggle" onclick="toggleSidebar('petugas')" aria-label="Buka menu">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
                 <div class="topbar-title" id="title-petugas">@yield('page-title', 'Daftar Tugas Hari Ini')</div>
                 <div class="user-profile">
                     <div class="avatar" style="background: var(--warning);">
@@ -54,8 +57,19 @@
             </div>
         </div>
     </div>
+    <div class="sidebar-backdrop" id="petugasSidebarBackdrop" onclick="toggleSidebar('petugas')"></div>
 
     <script>
+        function toggleSidebar(role) {
+            const app = document.getElementById('app-' + role);
+            if (!app) return;
+            const sidebar = app.querySelector('.sidebar');
+            const backdrop = document.getElementById(role + 'SidebarBackdrop');
+            if (!sidebar || !backdrop) return;
+            sidebar.classList.toggle('show');
+            backdrop.classList.toggle('show');
+        }
+
         function switchTab(role, tabId, element) {
             const app = document.getElementById('app-' + role);
             const menuItems = app.querySelectorAll('.menu-item');

@@ -14,7 +14,7 @@
         <!-- Sidebar Admin -->
         <div class="sidebar">
             <div class="sidebar-header">
-                <h2><i class="fa-solid fa-shield-halved"></i> KosCare</h2>
+                <h2><img src="{{ asset('image/koscare-logo.jpeg') }}" alt="KosCare Logo"> KosCare</h2>
                 <span style="background: var(--text-main); color: white;">Administrator Panel</span>
             </div>
             <ul class="menu-list">
@@ -63,6 +63,9 @@
         <!-- Main Content -->
         <div class="main-content">
             <div class="topbar">
+                <button class="topbar-toggle" onclick="toggleSidebar('admin')" aria-label="Buka menu">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
                 <div class="topbar-title" id="title-admin">@yield('page-title', 'Ikhtisar Utama')</div>
                 <div class="topbar-actions">
                     <div class="notification-btn" style="position:relative;">
@@ -90,8 +93,20 @@
             </div>
         </div>
     </div>
+    <div class="sidebar-backdrop" id="adminSidebarBackdrop" onclick="toggleSidebar('admin')"></div>
 
     <script>
+        // Fungsi toggle sidebar mobile
+        function toggleSidebar(role) {
+            const app = document.getElementById('app-' + role);
+            if (!app) return;
+            const sidebar = app.querySelector('.sidebar');
+            const backdrop = document.getElementById(role + 'SidebarBackdrop');
+            if (!sidebar || !backdrop) return;
+            sidebar.classList.toggle('show');
+            backdrop.classList.toggle('show');
+        }
+
         // Fungsi switchTab global (sama seperti di desain)
         function switchTab(role, tabId, element) {
             const app = document.getElementById('app-' + role);

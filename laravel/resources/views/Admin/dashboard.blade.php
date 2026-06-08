@@ -109,7 +109,7 @@
                             <td><span class="badge badge-info">{{ $setoran->kategori->nama_kategori ?? '-' }}</span></td>
                             <td>
                                 @if($setoran->foto)
-                                    <img src="{{ asset('storage/' . $setoran->foto) }}" alt="Foto" style="width:48px; height:48px; object-fit:cover; border-radius:8px;">
+                                    <img src="{{ asset('image/koscare-logo.jpeg') }}" alt="Foto" style="width:48px; height:48px; object-fit:cover; border-radius:8px;">
                                 @else
                                     <div style="width:48px;height:48px;background:var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;">
                                         <i class="fa-solid fa-image"></i>
@@ -418,14 +418,18 @@
         <div class="panel">
             <div class="panel-header"><h3 class="panel-title">Grafik Volume Sampah per Bulan</h3></div>
             <div class="panel-body">
-                <canvas id="barChart" style="max-height: 400px;"></canvas>
+                <div class="chart-container">
+                    <canvas id="barChart" style="max-height: 400px;"></canvas>
+                </div>
             </div>
         </div>
 
         <div class="panel" style="margin-top: 24px;">
             <div class="panel-header"><h3 class="panel-title">Komposisi Kategori Sampah</h3></div>
             <div class="panel-body">
-                <canvas id="pieChart" style="max-height: 400px;"></canvas>
+                <div class="chart-container">
+                    <canvas id="pieChart" style="max-height: 400px;"></canvas>
+                </div>
             </div>
         </div>
     </div>

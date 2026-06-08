@@ -20,10 +20,12 @@ class ProfileController extends Controller
             'name' => 'required|string|max:255',
             'no_wa' => 'nullable|string|max:20',
             'no_kamar' => 'nullable|string|max:100',
+            'nama_kos' => 'required|string|max:255',
+            'alamat_kos' => 'required|string|max:255',
         ]);
 
         $user = Auth::user();
-        $user->update($request->only('name', 'no_wa', 'no_kamar'));
+        $user->update($request->only('name', 'no_wa', 'no_kamar', 'nama_kos', 'alamat_kos'));
 
         return redirect()->route('resident.dashboard', ['tab' => 'profile-resident'])
             ->with('success', 'Profil berhasil diperbarui.');
