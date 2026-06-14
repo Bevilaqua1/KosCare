@@ -17,6 +17,7 @@ class AdminUserSeeder extends Seeder
             'role' => 'admin',
             'no_kamar' => null,
             'no_wa' => '08123456789',
+            'alamat_kos' => 'Jl. Contoh Alamat No.123, Kota Contoh',
         ]);
     }
 }

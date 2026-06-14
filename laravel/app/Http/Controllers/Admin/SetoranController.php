@@ -102,7 +102,7 @@ class SetoranController extends Controller
             'petugas_id' => $request->petugas_id,
         ]);
 
-        return redirect()->route('admin.dashboard', ['tab' => 'validasi-admin'])
+        return redirect()->route('admin.dashboard', ['tab' => 'jadwal-admin'])
             ->with('success', 'Jadwal penjemputan berhasil dibuat untuk setoran #' . $setoran->id);
     }
 

@@ -8,6 +8,7 @@ use App\Models\PenukaranPoin;
 use App\Models\SetoranSampah;  
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 
 class RewardController extends Controller
 {
@@ -23,12 +24,16 @@ class RewardController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'reward_id' => 'required|exists:kategori_reward,id',
             'jumlah' => 'required|integer|min:1',
         ]);
 
-         // ... validasi
+        if ($validator->fails()) {
+            return redirect()->route('resident.dashboard', ['tab' => 'reward-resident'])
+                ->withErrors($validator)
+                ->withInput();
+        }
 
         $reward = KategoriReward::findOrFail($request->reward_id);
         $user = Auth::user();
@@ -46,7 +51,8 @@ class RewardController extends Controller
 
         // Cek saldo mencukupi
         if ($saldoPoin < $poinDibutuhkan) {
-            return back()->with('error', 'Poin Anda tidak mencukupi.');
+            return redirect()->route('resident.dashboard', ['tab' => 'reward-resident'])
+                ->with('error', 'Poin Anda tidak mencukupi.');
         }
         PenukaranPoin::create([
             'user_id' => $user->id,
