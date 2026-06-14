@@ -93,10 +93,11 @@
                     </div>
                     <div class="form-group">
                         <label for="estimasi_berat">Estimasi Berat Total (Opsional)</label>
-                        <div style="position: relative;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
                             <input type="number" name="estimasi_berat" id="estimasi_berat" class="form-control" 
-                                placeholder="0.0" step="0.1" min="0" value="{{ old('estimasi_berat') }}">
-                            <span style="position: absolute; right: 16px; top: 12px; color: var(--text-light); font-weight: 600;">Kg</span>
+                                placeholder="0.0" step="0.1" min="0" value="{{ old('estimasi_berat') }}"
+                                style="flex:1; min-width:0;">
+                            <span style="color: var(--text-light); font-weight: 600;">Kg</span>
                         </div>
                         @error('estimasi_berat')
                             <span class="text-sm" style="color: var(--danger);">{{ $message }}</span>
