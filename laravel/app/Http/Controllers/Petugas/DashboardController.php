@@ -7,7 +7,8 @@ use Illuminate\Http\Request;
 use App\Models\JadwalPengangkutan;
 use App\Models\SetoranSampah;
 use Illuminate\Support\Facades\Auth;
-USE App\Models\KategoriSampah;
+use App\Models\KategoriSampah;
+use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
@@ -20,15 +21,29 @@ class DashboardController extends Controller
             ->orderBy('waktu_mulai')
             ->get();
 
-        // HANYA setoran pending yang SUDAH dijadwalkan untuk petugas ini
-        $setorans = SetoranSampah::with(['user', 'kategori', 'jadwal'])
+        // HANYA setoran pending yang SUDAH dijadwalkan untuk petugas ini HARI INI
+        // Diurutkan berdasarkan waktu jemput terdekat
+        $setoransHariIni = SetoranSampah::with(['user', 'kategori', 'jadwal'])
             ->where('status', 'pending')
             ->whereHas('jadwal', function ($query) {
-                $query->where('petugas_id', Auth::id());
+                $query->where('petugas_id', Auth::id())
+                      ->whereDate('tanggal', Carbon::today());
             })
-            ->latest()
-            ->get();
+            ->get()
+            ->sortBy(fn($s) => optional($s->jadwal)->waktu_mulai)
+            ->values();
 
+        // HANYA setoran pending yang SUDAH dijadwalkan untuk petugas ini HARI MENDATANG
+        // Diurutkan berdasarkan tanggal & waktu jemput terdekat
+        $setoransMendatang = SetoranSampah::with(['user', 'kategori', 'jadwal'])
+            ->where('status', 'pending')
+            ->whereHas('jadwal', function ($query) {
+                $query->where('petugas_id', Auth::id())
+                      ->whereDate('tanggal', '>', Carbon::today());
+            })
+            ->get()
+            ->sortBy(fn($s) => optional($s->jadwal)->tanggal . ' ' . optional($s->jadwal)->waktu_mulai)
+            ->values();
        
         // Riwayat pengangkutan milik petugas ini
         $riwayatAngkut = SetoranSampah::with(['user', 'kategori'])
@@ -37,6 +52,6 @@ class DashboardController extends Controller
             ->latest()
             ->get();
 
-        return view('Petugas.dashboard', compact('jadwals', 'setorans', 'riwayatAngkut'));
+        return view('Petugas.dashboard', compact('jadwals', 'setoransHariIni', 'setoransMendatang', 'riwayatAngkut'));
     }
 }

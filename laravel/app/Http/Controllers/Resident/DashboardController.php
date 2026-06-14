@@ -32,13 +32,13 @@ class DashboardController extends Controller
             ->where('status', 'selesai')
             ->sum('poin_didapat');
 
-        // Total poin yang sudah digunakan (penukaran disetujui)
+        // Total poin yang sudah digunakan (penukaran disetujui & pending)
         $totalPoinDipakai = PenukaranPoin::where('user_id', Auth::id())
-            ->where('status', 'disetujui')
+            ->whereIn('status', ['pending', 'disetujui'])
             ->sum('total_poin');
 
         // Sisa saldo poin
-        $totalPoin = $totalPoinDiterima - $totalPoinDipakai;
+        $totalPoin = max(0, $totalPoinDiterima - $totalPoinDipakai);
 
         // Semua jadwal (untuk tab Jadwal Angkut) - hanya jadwal yang terkait dengan setoran user saat ini dan status pending
         $jadwals = JadwalPengangkutan::whereHas('setorans', function ($q) {

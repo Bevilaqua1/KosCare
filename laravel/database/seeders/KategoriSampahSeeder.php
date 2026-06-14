@@ -10,21 +10,9 @@ class KategoriSampahSeeder extends Seeder
     public function run()
     {
         $kategoris = [
-            [
-                'nama_kategori' => 'Plastik Botol',
-                'deskripsi' => 'Botol air mineral bersih tanpa isi',
-                'poin_per_kg' => 10,
-            ],
-            [
-                'nama_kategori' => 'Kertas & Karton',
-                'deskripsi' => 'Kardus bekas, HVS, koran kering',
-                'poin_per_kg' => 8,
-            ],
-            [
-                'nama_kategori' => 'Logam & Kaca',
-                'deskripsi' => 'Kaleng, besi, botol kaca',
-                'poin_per_kg' => 15,
-            ],  
+            ['nama_kategori' => 'Organik', 'deskripsi' => 'Sisa makanan, daun, dll.','poin_per_kg' => 10],
+            ['nama_kategori' => 'Anorganik', 'deskripsi' => 'Plastik, kaca, logam, dll.','poin_per_kg' => 5],
+            ['nama_kategori' => 'B3', 'deskripsi' => 'Bahan Berbahaya dan Beracun (baterai, lampu, dll.)','poin_per_kg' => 20],
         ];
 
         foreach ($kategoris as $kat) {

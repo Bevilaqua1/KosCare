@@ -13,7 +13,7 @@
         <!-- Sidebar -->
         <div class="sidebar">
             <div class="sidebar-header">
-                <h2><img src="{{ asset('image/koscare-logo.jpeg') }}" alt="KosCare Logo"> KosCare</h2>
+                <h2><img src="{{ asset('image/yop.png') }}" alt="KosCare Logo"> KosCare</h2>
                 <span style="background: var(--warning-bg); color: #B45309;">Akses Petugas</span>
             </div>
             <ul class="menu-list">
@@ -28,7 +28,7 @@
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button type="submit" class="btn btn-outline" style="width: 100%;">
-                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Keluar
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Keluar Sistem
                     </button>
                 </form>
             </div>
@@ -93,6 +93,30 @@
                 topbarTitle.innerText = clone.innerText.trim();
             }
         }
+
+        // Auto-dismiss flash notifications after 3 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.flash-alert');
+            alerts.forEach(function(alert) {
+                setTimeout(function() {
+                    alert.style.maxHeight = alert.offsetHeight + 'px';
+                    alert.style.transition = 'all 0.5s ease';
+                    alert.offsetHeight; // force reflow
+                    
+                    alert.style.opacity = '0';
+                    alert.style.transform = 'translateY(-10px)';
+                    alert.style.maxHeight = '0';
+                    alert.style.paddingTop = '0';
+                    alert.style.paddingBottom = '0';
+                    alert.style.marginTop = '0';
+                    alert.style.marginBottom = '0';
+                    
+                    setTimeout(function() {
+                        alert.remove();
+                    }, 500);
+                }, 3000);
+            });
+        });
     </script>
     @stack('scripts')
 </body>

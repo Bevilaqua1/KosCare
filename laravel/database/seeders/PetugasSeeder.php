@@ -15,14 +15,12 @@ class PetugasSeeder extends Seeder
     public function run()
     {
         User::create([
-           'name' => 'Petugas Lapangan',
+            'name' => 'Petugas Lapangan',
             'email' => 'petugas@koscare.com',
             'password' => Hash::make('12345678'),
             'role' => 'petugas',
             'no_wa' => '08123456780',
             'no_kamar' => null,
-            'nama_kos' => null,
-            'alamat_kos' => null,
         ]);
     }
 }

@@ -22,12 +22,29 @@ class SetoranController extends Controller
     // Menyimpan pengajuan baru
     public function store(Request $request)
     {
+        $request->merge(['tanggal_setor' => now()->toDateString()]);
+
+        $messages = [
+            'kategori_id.required' => 'Kategori sampah wajib dipilih.',
+            'kategori_id.exists' => 'Kategori sampah tidak valid.',
+            'estimasi_berat.required' => 'Estimasi berat wajib diisi.',
+            'estimasi_berat.numeric' => 'Estimasi berat harus berupa angka.',
+            'estimasi_berat.min' => 'Berat sampah minimal yang diajukan adalah 1 Kg.',
+            'estimasi_berat.max' => 'Berat sampah maksimal yang diajukan adalah 50 Kg.',
+            'tanggal_setor.required' => 'Tanggal setor wajib diisi.',
+            'tanggal_setor.date' => 'Tanggal setor tidak valid.',
+            'foto.required' => 'Foto bukti sampah wajib diunggah.',
+            'foto.image' => 'File harus berupa gambar.',
+            'foto.mimes' => 'Format foto harus jpeg, png, atau jpg.',
+            'foto.max' => 'Ukuran foto maksimal adalah 5 MB.',
+        ];
+
         $validator = Validator::make($request->all(), [
             'kategori_id' => 'required|exists:kategori_sampah,id',
-            'estimasi_berat' => 'nullable|numeric|min:0.1',
+            'estimasi_berat' => 'required|numeric|min:1|max:50',
             'tanggal_setor' => 'required|date',
-            'foto' => 'required|image|mimes:jpeg,png,jpg|max:5120', // max 5MB
-        ]);
+            'foto' => 'required|image|mimes:jpeg,png,jpg|max:5120',
+        ], $messages);
 
         if ($validator->fails()) {
             return redirect()->route('resident.dashboard', ['tab' => 'setor-penghuni'])

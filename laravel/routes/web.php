@@ -4,7 +4,18 @@ use Illuminate\Support\Facades\Route;
 
 // Root: redirect guest ke login, user login dapat 404
 Route::get('/', function () {
-    return auth()->check() ? abort(404) : redirect('/login');
+    if (auth()->check()) {
+        $user = auth()->user();
+        if ($user->isAdmin()) {
+            return redirect()->route('admin.dashboard');
+        } elseif ($user->isPetugas()) {
+            return redirect()->route('petugas.dashboard');
+        } elseif ($user->isResident()) {
+            return redirect()->route('resident.dashboard');
+        }
+        return abort(404);
+    }
+    return redirect('/login');
 });
 
 // Auth routes (Breeze) – sudah termasuk POST logout

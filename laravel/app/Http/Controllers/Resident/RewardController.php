@@ -8,7 +8,6 @@ use App\Models\PenukaranPoin;
 use App\Models\SetoranSampah;  
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
 
 class RewardController extends Controller
 {
@@ -24,16 +23,18 @@ class RewardController extends Controller
 
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $request->validate([
             'reward_id' => 'required|exists:kategori_reward,id',
             'jumlah' => 'required|integer|min:1',
+        ], [
+            'reward_id.required' => 'Reward wajib dipilih.',
+            'reward_id.exists' => 'Item reward yang dipilih tidak valid.',
+            'jumlah.required' => 'Jumlah penukaran wajib diisi.',
+            'jumlah.integer' => 'Jumlah penukaran harus berupa angka bulat.',
+            'jumlah.min' => 'Jumlah penukaran minimal adalah 1.',
         ]);
 
-        if ($validator->fails()) {
-            return redirect()->route('resident.dashboard', ['tab' => 'reward-resident'])
-                ->withErrors($validator)
-                ->withInput();
-        }
+         // ... validasi
 
         $reward = KategoriReward::findOrFail($request->reward_id);
         $user = Auth::user();
@@ -43,16 +44,15 @@ class RewardController extends Controller
             ->where('status', 'selesai')
             ->sum('poin_didapat');
         $totalPoinDipakai = PenukaranPoin::where('user_id', $user->id)
-            ->where('status', 'disetujui')
+            ->whereIn('status', ['pending', 'disetujui'])
             ->sum('total_poin');
-        $saldoPoin = $totalPoinDiterima - $totalPoinDipakai;
+        $saldoPoin = max(0, $totalPoinDiterima - $totalPoinDipakai);
 
         $poinDibutuhkan = $reward->poin_diperlukan * $request->jumlah;
 
         // Cek saldo mencukupi
         if ($saldoPoin < $poinDibutuhkan) {
-            return redirect()->route('resident.dashboard', ['tab' => 'reward-resident'])
-                ->with('error', 'Poin Anda tidak mencukupi.');
+            return back()->with('error', 'Poin Anda tidak mencukupi.');
         }
         PenukaranPoin::create([
             'user_id' => $user->id,

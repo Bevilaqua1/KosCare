@@ -27,6 +27,10 @@ class SetoranController extends Controller
     {
         $request->validate([
             'berat_aktual' => 'required|numeric|min:0',
+        ], [
+            'berat_aktual.required' => 'Berat aktual wajib diisi.',
+            'berat_aktual.numeric' => 'Berat aktual harus berupa angka.',
+            'berat_aktual.min' => 'Berat aktual minimal adalah 0 Kg.',
         ]);
 
         $berat = $request->berat_aktual;
@@ -79,12 +83,34 @@ class SetoranController extends Controller
     // Menyimpan jadwal baru untuk setoran
     public function jadwalkan(Request $request, SetoranSampah $setoran)
     {
+        // Gabungkan tanggal_jemput dengan waktu_mulai dan waktu_selesai
+        if ($request->filled(['tanggal_jemput', 'waktu_mulai'])) {
+            $request->merge([
+                'waktu_mulai' => $request->tanggal_jemput . ' ' . $request->waktu_mulai
+            ]);
+        }
+        if ($request->filled(['tanggal_jemput', 'waktu_selesai'])) {
+            $request->merge([
+                'waktu_selesai' => $request->tanggal_jemput . ' ' . $request->waktu_selesai
+            ]);
+        }
+
         $request->validate([
-            // 'tanggal_jemput' => 'required|date|after_or_equal:today',
-            'waktu_mulai' => 'required',
-            'waktu_selesai' => 'required|after:waktu_mulai',
+            'tanggal_jemput' => 'required|date|after_or_equal:today',
+            'waktu_mulai' => 'required|date|after:now',
+            'waktu_selesai' => 'required|date|after:waktu_mulai',
             'petugas_id' => 'required|exists:users,id',
             'keterangan' => 'nullable|string',
+        ], [
+            'tanggal_jemput.required' => 'Tanggal jemput wajib diisi.',
+            'tanggal_jemput.date' => 'Tanggal jemput tidak valid.',
+            'tanggal_jemput.after_or_equal' => 'Tanggal jemput harus hari ini atau tanggal setelahnya.',
+            'waktu_mulai.required' => 'Waktu mulai penjemputan wajib diisi.',
+            'waktu_mulai.after' => 'Waktu mulai penjemputan harus setelah waktu sekarang.',
+            'waktu_selesai.required' => 'Waktu selesai penjemputan wajib diisi.',
+            'waktu_selesai.after' => 'Waktu selesai harus setelah waktu mulai.',
+            'petugas_id.required' => 'Petugas wajib dipilih.',
+            'petugas_id.exists' => 'Petugas yang dipilih tidak terdaftar.',
         ]);
 
         // Buat jadwal baru
@@ -102,7 +128,7 @@ class SetoranController extends Controller
             'petugas_id' => $request->petugas_id,
         ]);
 
-        return redirect()->route('admin.dashboard', ['tab' => 'jadwal-admin'])
+        return redirect()->route('admin.dashboard', ['tab' => 'validasi-admin'])
             ->with('success', 'Jadwal penjemputan berhasil dibuat untuk setoran #' . $setoran->id);
     }
 

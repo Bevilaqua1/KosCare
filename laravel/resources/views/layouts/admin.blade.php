@@ -14,12 +14,18 @@
         <!-- Sidebar Admin -->
         <div class="sidebar">
             <div class="sidebar-header">
-                <h2><img src="{{ asset('image/koscare-logo.jpeg') }}" alt="KosCare Logo"> KosCare</h2>
+                <h2><img src="{{ asset('image/yop.png') }}" alt="KosCare Logo"> KosCare</h2>
                 <span style="background: var(--text-main); color: white;">Administrator Panel</span>
             </div>
             <ul class="menu-list">
                 <li class="menu-item active" onclick="switchTab('admin', 'dash-admin', this)">
-                    <i class="fa-solid fa-chart-pie"></i> Ikhtisar Utama
+                    <i class="fa-solid fa-chart-pie"></i> Beranda
+                </li>
+                <li class="menu-item {{ $activeTab == 'jadwal-admin' ? 'active' : '' }}" onclick="switchTab('admin', 'jadwal-admin', this)">
+                    <i class="fa-solid fa-calendar-days"></i> Kelola Jadwal
+                    @if(isset($pendingJadwalCount) && $pendingJadwalCount > 0)
+                        <span class="badge">{{ $pendingJadwalCount }}</span>
+                    @endif
                 </li>
                 <li class="menu-item {{ $activeTab == 'validasi-admin' ? 'active' : '' }}" onclick="switchTab('admin', 'validasi-admin', this)">
                     <i class="fa-solid fa-list-check"></i> Validasi Setoran
@@ -27,15 +33,15 @@
                         <span class="badge">{{ $pendingValidationCount }}</span>
                     @endif
                 </li>
-                <li class="menu-item {{ $activeTab == 'kategori-admin' ? 'active' : '' }}" onclick="switchTab('admin', 'kategori-admin', this)">
-                    <i class="fa-solid fa-tags"></i> Kelola Kategori
-                </li>
-                <li class="menu-item {{ $activeTab == 'jadwal-admin' ? 'active' : '' }}" onclick="switchTab('admin', 'jadwal-admin', this)">
-                    <i class="fa-solid fa-calendar-days"></i> Kelola Jadwal
-                </li>
                 <li class="menu-item {{ $activeTab == 'reward-admin' ? 'active' : '' }}" 
                     onclick="switchTab('admin', 'reward-admin', this)">
                     <i class="fa-solid fa-gift"></i> Kelola Reward
+                    @if(isset($pendingRewardCount) && $pendingRewardCount > 0)
+                        <span class="badge">{{ $pendingRewardCount }}</span>
+                    @endif
+                </li>
+                <li class="menu-item {{ $activeTab == 'kategori-admin' ? 'active' : '' }}" onclick="switchTab('admin', 'kategori-admin', this)">
+                    <i class="fa-solid fa-tags"></i> Kelola Kategori
                 </li>
                 <li class="menu-item {{ $activeTab == 'artikel-admin' ? 'active' : '' }}"
                     onclick="switchTab('admin', 'artikel-admin', this)">
@@ -54,7 +60,7 @@
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button type="submit" class="btn btn-outline" style="width: 100%;">
-                        <i class="fa-solid fa-power-off"></i> Keluar Sistem
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Keluar Sistem
                     </button>
                 </form>
             </div>
@@ -66,18 +72,8 @@
                 <button class="topbar-toggle" onclick="toggleSidebar('admin')" aria-label="Buka menu">
                     <i class="fa-solid fa-bars"></i>
                 </button>
-                <div class="topbar-title" id="title-admin">@yield('page-title', 'Ikhtisar Utama')</div>
+                <div class="topbar-title" id="title-admin">@yield('page-title', 'Beranda')</div>
                 <div class="topbar-actions">
-                    <div class="notification-btn" style="position:relative;">
-                        <i class="fa-solid fa-inbox"></i>
-                        @if($pendingValidationCount > 0)
-                            <span style="position:absolute; top: -4px; right: -4px; background: var(--danger); color: white; 
-                                        font-size: 10px; font-weight: 700; width: 18px; height: 18px; 
-                                        display: flex; align-items: center; justify-content: center; border-radius: 50%;">
-                                {{ $pendingValidationCount }}
-                            </span>
-                        @endif
-                    </div>
                     <div class="user-profile">
                         <div class="avatar" style="background: var(--text-main);">AD</div>
                         <div class="user-info">
@@ -131,6 +127,30 @@
                 topbarTitle.innerText = clone.innerText.trim();
             }
         }
+
+        // Auto-dismiss flash notifications after 3 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.flash-alert');
+            alerts.forEach(function(alert) {
+                setTimeout(function() {
+                    alert.style.maxHeight = alert.offsetHeight + 'px';
+                    alert.style.transition = 'all 0.5s ease';
+                    alert.offsetHeight; // force reflow
+                    
+                    alert.style.opacity = '0';
+                    alert.style.transform = 'translateY(-10px)';
+                    alert.style.maxHeight = '0';
+                    alert.style.paddingTop = '0';
+                    alert.style.paddingBottom = '0';
+                    alert.style.marginTop = '0';
+                    alert.style.marginBottom = '0';
+                    
+                    setTimeout(function() {
+                        alert.remove();
+                    }, 500);
+                }, 3000);
+            });
+        });
     </script>
     @stack('scripts')
 </body>

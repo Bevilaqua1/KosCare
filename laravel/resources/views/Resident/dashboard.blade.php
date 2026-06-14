@@ -4,12 +4,19 @@
 @section('content')
     {{-- Pesan sukses --}}
     @if(session('success'))
-    <div style="background: var(--success-bg); color: var(--primary-dark); padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+    <div class="flash-alert" style="background: var(--success-bg); color: var(--primary-dark); padding: 16px; border-radius: 8px; margin-bottom: 20px; overflow: hidden;">
         <i class="fa-solid fa-check-circle"></i> {{ session('success') }}
     </div>
     @endif
 
-    <!-- {{-- ===================== TAB IKHtisar ===================== --}} -->
+    {{-- Pesan error/gagal --}}
+    @if(session('error'))
+    <div class="flash-alert" style="background: #F8D7DA; color: #842029; padding: 16px; border-radius: 8px; margin-bottom: 20px; overflow: hidden;">
+        <i class="fa-solid fa-exclamation-circle"></i> {{ session('error') }}
+    </div>
+    @endif
+
+    <!-- {{-- ===================== TAB DASHBOARD ===================== --}} -->
 <div id="dash-penghuni" class="tab-content {{ $activeTab == 'dash-penghuni' ? 'active' : '' }}">
     <div class="card-grid">
         {{-- Kartu Nama Kos --}}
@@ -66,16 +73,16 @@
             </div>
             <div class="panel-body">
                 @if(session('success'))
-                    <div style="background: var(--success-bg); color: var(--primary-dark); padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                    <div class="flash-alert" style="background: var(--success-bg); color: var(--primary-dark); padding: 12px; border-radius: 8px; margin-bottom: 16px; overflow: hidden;">
                         <i class="fa-solid fa-check-circle"></i> {{ session('success') }}
                     </div>
                 @endif
                 @if(session('error'))
-                    <div style="background: #fee2e2; color: var(--danger); padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                    <div class="flash-alert" style="background: #fee2e2; color: var(--danger); padding: 12px; border-radius: 8px; margin-bottom: 16px; overflow: hidden;">
                         <i class="fa-solid fa-exclamation-circle"></i> {{ session('error') }}
                     </div>
                 @endif
-                <form action="{{ route('resident.setoran.store') }}" method="POST" enctype="multipart/form-data">
+                <form action="{{ route('resident.setoran.store') }}" method="POST" enctype="multipart/form-data" onsubmit="return validateSetoranForm(event)">
                     @csrf
                     <div class="form-group">
                         <label for="kategori_id">Kategori Dominan Sampah</label>
@@ -92,25 +99,19 @@
                         @enderror
                     </div>
                     <div class="form-group">
-                        <label for="estimasi_berat">Estimasi Berat Total (Opsional)</label>
+                        <label for="estimasi_berat">Estimasi Berat Total (Wajib, 1 - 50 Kg)</label>
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <input type="number" name="estimasi_berat" id="estimasi_berat" class="form-control" 
-                                placeholder="0.0" step="0.1" min="0" value="{{ old('estimasi_berat') }}"
-                                style="flex:1; min-width:0;">
+                                placeholder="1.0" step="0.1" min="1" max="50" value="{{ old('estimasi_berat') }}"
+                                style="flex:1; min-width:0;" required>
                             <span style="color: var(--text-light); font-weight: 600;">Kg</span>
                         </div>
+                        <span class="text-sm" style="display: block; margin-top: 4px; color: var(--text-muted);">* Berat sampah yang dapat diajukan minimal 1 Kg dan maksimal 50 Kg.</span>
                         @error('estimasi_berat')
                             <span class="text-sm" style="color: var(--danger);">{{ $message }}</span>
                         @enderror
                     </div>
-                    <div class="form-group">
-                        <label for="tanggal_setor">Tanggal Penyetoran</label>
-                        <input type="date" name="tanggal_setor" id="tanggal_setor" class="form-control" 
-                            value="{{ old('tanggal_setor', date('Y-m-d')) }}" required>
-                        @error('tanggal_setor')
-                            <span class="text-sm" style="color: var(--danger);">{{ $message }}</span>
-                        @enderror
-                    </div>
+
                     <div class="form-group" style="margin-top: 32px;">
                         <label>Foto Bukti Sampah (Wajib)</label>
                         <p class="text-sm mb-4">Foto ini akan membantu petugas mempersiapkan alat angkut yang sesuai.</p>
@@ -397,11 +398,40 @@
 <script>
     function displayFileName(input) {
         const display = document.getElementById('file-name-display');
+        const wireframeBox = document.querySelector('.wireframe-box[for="foto"]');
         if (input.files && input.files[0]) {
-            display.innerText = 'File dipilih: ' + input.files[0].name;
+            display.innerHTML = '<span style="color: var(--primary); font-weight: bold;"><i class="fa-solid fa-circle-check"></i> Foto berhasil dipilih: ' + input.files[0].name + '</span>';
+            if (wireframeBox) {
+                wireframeBox.style.borderColor = 'var(--primary)';
+                wireframeBox.style.background = 'rgba(16, 185, 129, 0.05)';
+                const icon = wireframeBox.querySelector('.icon-upload i');
+                if (icon) {
+                    icon.className = 'fa-solid fa-circle-check';
+                    icon.style.color = 'var(--primary)';
+                }
+            }
         } else {
             display.innerText = '';
+            if (wireframeBox) {
+                wireframeBox.style.borderColor = 'var(--border)';
+                wireframeBox.style.background = 'transparent';
+                const icon = wireframeBox.querySelector('.icon-upload i');
+                if (icon) {
+                    icon.className = 'fa-solid fa-cloud-arrow-up';
+                    icon.style.color = '';
+                }
+            }
         }
+    }
+
+    function validateSetoranForm(event) {
+        const fileInput = document.getElementById('foto');
+        if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+            event.preventDefault();
+            alert('Silakan unggah Foto Bukti Sampah terlebih dahulu sebelum mengirim pengajuan!');
+            return false;
+        }
+        return true;
     }
 </script>
 @endpush

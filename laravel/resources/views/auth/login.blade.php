@@ -5,7 +5,7 @@
 <div class="auth-screen">
     <div class="auth-visual">
         <div class="auth-logo">
-            <img src="{{ asset('image/koscare-logo.jpeg') }}" alt="KosCare Logo">
+            <img src="{{ asset('image/yop.png') }}" alt="KosCare Logo">
         </div>
         <h1>KosCare</h1>
         <p>Platform pintar untuk mengelola bank sampah di lingkungan kos Anda. Mulai langkah kecil untuk bumi yang lebih bersih.</p>
@@ -14,6 +14,12 @@
         <div class="auth-box">
             <h2>Selamat Datang Kembali</h2>
             <p>Silakan masuk untuk melanjutkan aktivitas Anda.</p>
+            
+            @if(session('success'))
+                <div class="flash-alert" style="background: var(--success-bg); color: var(--primary-dark); padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; display: flex; align-items: center; gap: 8px; overflow: hidden;">
+                    <i class="fa-solid fa-check-circle"></i> {{ session('success') }}
+                </div>
+            @endif
             
             <form method="POST" action="{{ route('login') }}">
                 @csrf

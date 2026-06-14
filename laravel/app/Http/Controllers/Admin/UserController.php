@@ -7,7 +7,6 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
@@ -19,7 +18,7 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
             'password' => 'required|string|min:6',
@@ -29,12 +28,6 @@ class UserController extends Controller
             'nama_kos' => 'nullable|string|max:100',
             'alamat_kos' => 'nullable|string|max:255',
         ]);
-
-        if ($validator->fails()) {
-            return redirect()->route('admin.dashboard', ['tab' => 'pengguna-admin'])
-                ->withErrors($validator)
-                ->withInput();
-        }
 
         User::create([
             'name' => $request->name,
@@ -61,7 +54,7 @@ class UserController extends Controller
 
     public function update(Request $request, User $user)
     {
-        $validator = Validator::make($request->all(), [
+        $request->validate([
             'name' => 'required|string|max:255',
             'email' => ['required', 'email', Rule::unique('users')->ignore($user->id)],
             'role' => ['required', Rule::in(['resident', 'petugas', 'admin'])],
@@ -71,21 +64,10 @@ class UserController extends Controller
             'alamat_kos' => 'nullable|string|max:255',
         ]);
 
-        if ($validator->fails()) {
-            return redirect()->route('admin.dashboard', ['tab' => 'pengguna-admin'])
-                ->withErrors($validator)
-                ->withInput();
-        }
-
         $data = $request->only('name', 'email', 'role', 'no_wa', 'no_kamar', 'nama_kos', 'alamat_kos');
 
         if ($request->filled('password')) {
-            $pwdValidator = Validator::make($request->only('password'), ['password' => 'string|min:6']);
-            if ($pwdValidator->fails()) {
-                return redirect()->route('admin.dashboard', ['tab' => 'pengguna-admin'])
-                    ->withErrors($pwdValidator)
-                    ->withInput();
-            }
+            $request->validate(['password' => 'string|min:6']);
             $data['password'] = Hash::make($request->password);
         }
 

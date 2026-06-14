@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\KategoriSampah;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 
 class KategoriController extends Controller
 {
@@ -19,22 +18,16 @@ class KategoriController extends Controller
     // Simpan kategori baru
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $request->validate([
             'nama_kategori' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
             'poin_per_kg' => 'required|integer|min:1',
         ]);
 
-        if ($validator->fails()) {
-            return redirect()->route('admin.dashboard', ['tab' => 'kategori-admin'])
-                ->withErrors($validator)
-                ->withInput();
-        }
-
         KategoriSampah::create($request->only('nama_kategori', 'deskripsi', 'poin_per_kg'));
 
         return redirect()->route('admin.dashboard', ['tab' => 'kategori-admin'])
-            ->with('success', 'Kategori berhasil ditambahkan.');
+    ->with('success', 'Kategori berhasil ditambahkan.');
     }
 
     // Tampilkan form edit (bisa langsung di modal dengan data JSON)
@@ -49,17 +42,11 @@ class KategoriController extends Controller
     // Update kategori
     public function update(Request $request, KategoriSampah $kategori)
     {
-        $validator = Validator::make($request->all(), [
+        $request->validate([
             'nama_kategori' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
             'poin_per_kg' => 'required|integer|min:1',
         ]);
-
-        if ($validator->fails()) {
-            return redirect()->route('admin.dashboard', ['tab' => 'kategori-admin'])
-                ->withErrors($validator)
-                ->withInput();
-        }
 
         $kategori->update($request->only('nama_kategori', 'deskripsi', 'poin_per_kg'));
 

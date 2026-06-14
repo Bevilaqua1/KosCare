@@ -22,14 +22,29 @@ class DashboardController extends Controller
         $totalPengguna = User::count();
         $pendingSetoran = SetoranSampah::where('status', 'pending')->count();
         $totalSampahTerkumpul = SetoranSampah::where('status', 'selesai')->sum('berat_aktual');
-        $jadwals = JadwalPengangkutan::with('petugas')->latest()->get();
+        $jadwals = JadwalPengangkutan::with('petugas')
+            ->whereHas('setorans', function ($query) {
+                $query->whereIn('status', ['pending', 'diangkut']);
+            })
+            ->latest()
+            ->get();
         $petugasList = User::where('role', 'petugas')->get();
         $rewards = KategoriReward::latest()->get();
         $penukarans = PenukaranPoin::with(['user', 'kategoriReward'])->where('status', 'pending')->latest()->get();
         $setoransPending = SetoranSampah::with(['user', 'kategori', 'jadwal'])->where('status', 'pending')->latest()->get();
         $setoransDiangkut = SetoranSampah::with(['user', 'kategori', 'jadwal'])->where('status', 'diangkut')->latest()->get();
+        // Setoran baru yang perlu tindakan (pending belum dijadwalkan + diangkut menunggu validasi)
+        $setoransBaru = SetoranSampah::with(['user', 'kategori', 'jadwal'])
+            ->where(function ($query) {
+                $query->where('status', 'pending')->whereNull('jadwal_id');
+            })
+            ->orWhere('status', 'diangkut')
+            ->latest()
+            ->get();
         $artikels = ArtikelEdukasi::latest()->get();
         $pendingValidationCount = SetoranSampah::where('status', 'diangkut')->count();
+        $pendingJadwalCount = SetoranSampah::where('status', 'pending')->whereNull('jadwal_id')->count();
+        $pendingRewardCount = $penukarans->count();
 // untuk grafik laporan
         // Data untuk grafik: total sampah per bulan (dari setoran selesai)
         $completedSetoran = SetoranSampah::where('status', 'selesai')->get();
@@ -61,8 +76,8 @@ class DashboardController extends Controller
 
     return view('Admin.dashboard', compact(
         'kategoris', 'activeTab', 'totalPengguna', 'pendingSetoran', 'totalSampahTerkumpul',
-        'setoransPending', 'setoransDiangkut', 'jadwals', 'petugasList', 'users', 'rewards', 'penukarans','artikels', 
-        'chartLabels', 'chartValues', 'pieLabels', 'pieValues', 'pendingValidationCount'
+        'setoransPending', 'setoransDiangkut', 'setoransBaru', 'jadwals', 'petugasList', 'users', 'rewards', 'penukarans','artikels', 
+        'chartLabels', 'chartValues', 'pieLabels', 'pieValues', 'pendingValidationCount', 'pendingJadwalCount', 'pendingRewardCount'
     ));
     }
 }

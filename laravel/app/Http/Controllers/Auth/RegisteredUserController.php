@@ -37,7 +37,7 @@ class RegisteredUserController extends Controller
         'no_kamar' => ['required', 'string', 'max:100'],
         'nama_kos' => ['required', 'string', 'max:255'],
         'alamat_kos' => ['required', 'string', 'max:255'],
-        // no_wa juga bisa ditambahkan jika diperlukan
+        'no_wa' => ['required', 'string', 'max:20'],
     ]);
 
     $user = User::create([
@@ -48,12 +48,12 @@ class RegisteredUserController extends Controller
         'no_kamar' => $request->no_kamar,
         'nama_kos' => $request->nama_kos,
         'alamat_kos' => $request->alamat_kos,
+        'no_wa' => $request->no_wa,
     ]);
 
     event(new Registered($user));
 
-    Auth::login($user);
-
-    return redirect()->route('resident.dashboard');
+    // Kembalikan ke halaman login dengan pesan sukses
+    return redirect()->route('login')->with('success', 'Pendaftaran akun berhasil! Silakan masuk dengan email dan kata sandi Anda.');
 }
 }

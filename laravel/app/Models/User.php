@@ -50,13 +50,24 @@ class User extends Authenticatable
 // Relasi penukaran poin (sebagai penghuni)
     public function penukaranPoin()
     {
-    return $this->hasMany(PenukaranPoin::class);
+        return $this->hasMany(PenukaranPoin::class);
     }
 
 // Relasi ke setoran_sampah
     public function setoranSampah()
     {
         return $this->hasMany(SetoranSampah::class);
+    }
+
+    // Hitung sisa saldo poin saat ini (Poin Selesai - Poin Dipakai/Pending)
+    public function getSaldoPoinAttribute()
+    {
+        if (!$this->isResident()) {
+            return 0;
+        }
+        $totalPoinDiterima = $this->setoranSampah()->where('status', 'selesai')->sum('poin_didapat');
+        $totalPoinDipakai = $this->penukaranPoin()->whereIn('status', ['pending', 'disetujui'])->sum('total_poin');
+        return max(0, $totalPoinDiterima - $totalPoinDipakai);
     }
 
 }

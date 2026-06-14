@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\ArtikelEdukasi;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Validator;
 
 class ArtikelController extends Controller
 {
@@ -18,18 +17,12 @@ class ArtikelController extends Controller
 
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $request->validate([
             'judul' => 'required|string|max:255',
             'isi' => 'required',
             'gambar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'tanggal_terbit' => 'required|date',
         ]);
-
-        if ($validator->fails()) {
-            return redirect()->route('admin.dashboard', ['tab' => 'artikel-admin'])
-                ->withErrors($validator)
-                ->withInput();
-        }
 
         $gambarPath = null;
         if ($request->hasFile('gambar')) {
@@ -59,18 +52,12 @@ class ArtikelController extends Controller
 
     public function update(Request $request, ArtikelEdukasi $artikel)
     {
-        $validator = Validator::make($request->all(), [
+        $request->validate([
             'judul' => 'required|string|max:255',
             'isi' => 'required',
             'gambar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'tanggal_terbit' => 'required|date',
         ]);
-
-        if ($validator->fails()) {
-            return redirect()->route('admin.dashboard', ['tab' => 'artikel-admin'])
-                ->withErrors($validator)
-                ->withInput();
-        }
 
         $data = $request->only('judul', 'isi', 'tanggal_terbit');
         if ($request->hasFile('gambar')) {

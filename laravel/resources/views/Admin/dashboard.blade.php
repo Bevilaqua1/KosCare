@@ -4,31 +4,45 @@
 @section('content')
     {{-- Pesan sukses --}}
     @if(session('success'))
-    <div style="background: var(--success-bg); color: var(--primary-dark); padding: 16px; border-radius: 8px; margin-bottom: 20px;">
-        <i class="fa-solid fa-check-circle"></i> {{ session('success') }}
-    </div>
+        <div class="flash-alert"
+            style="background: var(--success-bg); color: var(--primary-dark); padding: 16px; border-radius: 8px; margin-bottom: 20px; overflow: hidden;">
+            <i class="fa-solid fa-check-circle"></i> {{ session('success') }}
+        </div>
     @endif
     @if($errors->any())
-    <div style="background: #F8D7DA; color: #842029; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
-        <i class="fa-solid fa-exclamation-circle"></i> Terjadi kesalahan:
-        <ul style="margin: 12px 0 0 18px; padding: 0; list-style: disc;">
-            @foreach($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
+        <div class="flash-alert" style="background: #F8D7DA; color: #842029; padding: 16px; border-radius: 8px; margin-bottom: 20px; overflow: hidden;">
+            <i class="fa-solid fa-exclamation-circle"></i> Terjadi kesalahan:
+            <ul style="margin: 12px 0 0 18px; padding: 0; list-style: disc;">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
     @endif
 
-    <!-- Tab: Ikhtisar Utama -->
+    <!-- Tab: Dashboard Utama -->
     <div id="dash-admin" class="tab-content {{ $activeTab == 'dash-admin' ? 'active' : '' }}">
-        <div class="card-grid">
-            <div class="card">
+        <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+            <div class="card"
+                onclick="switchTab('admin', 'validasi-admin', document.querySelectorAll('#app-admin .menu-item')[2])"
+                style="cursor: pointer;">
                 <div class="card-icon" style="background:var(--warning-bg); color:#D97706;">
                     <i class="fa-solid fa-hourglass-half"></i>
                 </div>
                 <div class="card-info">
                     <h3>Menunggu Validasi</h3>
-                    <div class="value">{{ $pendingSetoran }} <span class="text-sm">Pengajuan</span></div>
+                    <div class="value">{{ $pendingValidationCount }} <span class="text-sm">Pengajuan</span></div>
+                </div>
+            </div>
+            <div class="card"
+                onclick="switchTab('admin', 'jadwal-admin', document.querySelectorAll('#app-admin .menu-item')[1])"
+                style="cursor: pointer;">
+                <div class="card-icon" style="background:var(--info-bg); color:#1D4ED8;">
+                    <i class="fa-solid fa-calendar-days"></i>
+                </div>
+                <div class="card-info">
+                    <h3>Kelola Jadwal</h3>
+                    <div class="value">{{ $pendingJadwalCount }} <span class="text-sm">Menunggu</span></div>
                 </div>
             </div>
             <div class="card">
@@ -53,27 +67,95 @@
 
         <div class="panel">
             <div class="panel-header">
-                <h3 class="panel-title">Perlu Tindakan Cepat (Validasi Baru)</h3>
+                <h3 class="panel-title">Perlu Tindakan Cepat (Pengajuan Baru)</h3>
             </div>
             <div class="table-responsive">
                 <table style="margin: 0; width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Penghuni</th>
+                            <th>Jenis Sampah</th>
+                            <th>Tanggal Setor</th>
+                            <th>Status</th>
+                            <th style="text-align: right;">Aksi</th>
+                        </tr>
+                    </thead>
                     <tbody>
-                        @forelse($setoransDiangkut->take(1) as $setoran)
-                        <tr>
-                            <td><strong>#{{ $setoran->id }}</strong><br><span class="text-sm">{{ optional($setoran->user)->no_kamar ?? '-' }}</span></td>
-                            <td>{{ $setoran->kategori->nama_kategori ?? '-' }}</td>
-                            <td>{{ optional($setoran->tanggal_setor)->format('d M Y') ?? '-' }}</td>
-                            <td style="text-align: right;">
-                                <button class="btn btn-small"
-                                    onclick="switchTab('admin', 'validasi-admin', document.querySelectorAll('#app-admin .menu-item')[1])">
-                                    Cek Detail <i class="fa-solid fa-arrow-right"></i>
-                                </button>
-                            </td>
-                        </tr>
+                        @forelse($setoransBaru->take(5) as $setoran)
+                            <tr>
+                                <td><strong>#{{ $setoran->id }}</strong></td>
+                                <td>
+                                    <strong>{{ optional($setoran->user)->name ?? '-' }}</strong><br>
+                                    <span class="text-sm">Kamar {{ optional($setoran->user)->no_kamar ?? '-' }}</span>
+                                </td>
+                                <td>{{ $setoran->kategori->nama_kategori ?? '-' }}</td>
+                                <td>{{ optional($setoran->tanggal_setor)->format('d M Y') ?? '-' }}</td>
+                                <td>
+                                    @if($setoran->status === 'pending')
+                                        <span class="badge badge-warning">Belum Dijadwalkan</span>
+                                    @elseif($setoran->status === 'diangkut')
+                                        <span class="badge badge-info" style="background:#DBEAFE; color:#1D4ED8;">Menunggu
+                                            Validasi</span>
+                                    @endif
+                                </td>
+                                <td style="text-align: right;">
+                                    @if($setoran->status === 'pending')
+                                        <button class="btn btn-small"
+                                            onclick="switchTab('admin', 'jadwal-admin', document.querySelectorAll('#app-admin .menu-item')[1])">
+                                            Jadwalkan <i class="fa-solid fa-arrow-right"></i>
+                                        </button>
+                                    @else
+                                        <button class="btn btn-small"
+                                            onclick="switchTab('admin', 'validasi-admin', document.querySelectorAll('#app-admin .menu-item')[2])">
+                                            Validasi <i class="fa-solid fa-arrow-right"></i>
+                                        </button>
+                                    @endif
+                                </td>
+                            </tr>
                         @empty
+                            <tr>
+                                <td colspan="6" style="text-align: center;">Tidak ada pengajuan baru.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="panel" style="margin-top: 24px;">
+            <div class="panel-header">
+                <h3 class="panel-title">Pengajuan Sampah yang Sudah di Jadwalkan</h3>
+                <button class="btn btn-small btn-outline"
+                    onclick="switchTab('admin', 'jadwal-admin', document.querySelectorAll('#app-admin .menu-item')[1])">
+                    Lihat Semua
+                </button>
+            </div>
+            <div class="table-responsive">
+                <table style="margin: 0; width: 100%;">
+                    <thead>
                         <tr>
-                            <td colspan="4" style="text-align: center;">Tidak ada setoran baru.</td>
+                            <th>Tanggal</th>
+                            <th>Waktu</th>
+                            <th>Petugas</th>
+                            <th>Keterangan</th>
                         </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($jadwals->take(5) as $j)
+                            <tr>
+                                <td>{{ optional($j->tanggal)->format('d M Y') ?? '-' }}</td>
+                                <td>{{ optional($j->waktu_mulai)->format('H:i') ?? '-' }} -
+                                    {{ optional($j->waktu_selesai)->format('H:i') ?? '-' }}
+                                </td>
+                                <td>{{ optional($j->petugas)->name ?? 'Belum Ditugaskan' }}</td>
+                                <td>{{ $j->keterangan ?? '-' }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="4" style="text-align: center;">Tidak ada pengajuan sampah yang sudah dijadwalkan.
+                                </td>
+                            </tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -101,46 +183,59 @@
                     </thead>
                     <tbody>
                         @forelse($setoransDiangkut as $setoran)
-                        <tr>
-                            <td>
-                                <strong>#{{ $setoran->id }}</strong><br>
-                                <span class="text-sm">{{ optional($setoran->user)->no_kamar ?? '-' }} ({{ optional($setoran->user)->name ?? 'Tidak Dikenal' }})</span>
-                            </td>
-                            <td><span class="badge badge-info">{{ $setoran->kategori->nama_kategori ?? '-' }}</span></td>
-                            <td>
-                                @if($setoran->foto)
-                                    <img src="{{ asset('image/koscare-logo.jpeg') }}" alt="Foto" style="width:48px; height:48px; object-fit:cover; border-radius:8px;">
-                                @else
-                                    <div style="width:48px;height:48px;background:var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;">
-                                        <i class="fa-solid fa-image"></i>
+                            <tr>
+                                <td>
+                                    <strong>#{{ $setoran->id }}</strong><br>
+                                    <span class="text-sm">{{ optional($setoran->user)->no_kamar ?? '-' }}
+                                        ({{ optional($setoran->user)->name ?? 'Tidak Dikenal' }})</span>
+                                </td>
+                                <td><span class="badge badge-info">{{ $setoran->kategori->nama_kategori ?? '-' }}</span></td>
+                                <td>
+                                    @if($setoran->foto)
+                                        <img src="{{ asset('storage/' . $setoran->foto) }}" alt="Foto"
+                                            style="width:48px; height:48px; object-fit:cover; border-radius:8px; cursor:pointer;"
+                                            onclick="showImagePreview('{{ asset('storage/' . $setoran->foto) }}')">
+                                    @else
+                                        <div
+                                            style="width:48px;height:48px;background:var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;">
+                                            <i class="fa-solid fa-image"></i>
+                                        </div>
+                                    @endif
+                                </td>
+                                <td>
+                                    <span class="text-sm" style="color: var(--text-muted); display: block; margin-bottom: 6px;">
+                                        Estimasi: <strong>{{ $setoran->estimasi_berat ?? '-' }} Kg</strong>
+                                    </span>
+                                    <form id="verifikasi-form-{{ $setoran->id }}"
+                                        action="{{ route('admin.setoran.verifikasi', $setoran->id) }}" method="POST"
+                                        class="form-verifikasi" style="display: flex; align-items: center; gap: 8px;">
+                                        @csrf
+                                        @method('PUT')
+                                        <input type="number" name="berat_aktual" class="form-control"
+                                            style="width:80px; padding:8px;" step="0.1" required>
+                                        <span>Kg</span>
+                                    </form>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button type="submit" class="btn btn-small" form="verifikasi-form-{{ $setoran->id }}"
+                                            style="background: var(--primary);">
+                                            <i class="fa-solid fa-check"></i> Setujui
+                                        </button>
+                                        <form action="{{ route('admin.setoran.tolak', $setoran->id) }}" method="POST"
+                                            style="display:inline;">
+                                            @csrf @method('PUT')
+                                            <button type="submit" class="btn btn-small btn-danger btn-icon" title="Tolak">
+                                                <i class="fa-solid fa-xmark"></i>
+                                            </button>
+                                        </form>
                                     </div>
-                                @endif
-                            </td>
-                            <td>
-                                <form id="verifikasi-form-{{ $setoran->id }}" action="{{ route('admin.setoran.verifikasi', $setoran->id) }}" method="POST" class="form-verifikasi" style="display: flex; align-items: center; gap: 8px;">
-                                    @csrf
-                                    @method('PUT')
-                                    <input type="number" name="berat_aktual" class="form-control" 
-                                        style="width:80px; padding:8px;" step="0.1" required>
-                                    <span>Kg</span>
-                                </form>
-                            </td>
-                            <td class="action-buttons">
-                                <button type="submit" class="btn btn-small" form="verifikasi-form-{{ $setoran->id }}" style="background: var(--primary); margin-right: 8px;">
-                                    <i class="fa-solid fa-check"></i> Setujui
-                                </button>
-                                <form action="{{ route('admin.setoran.tolak', $setoran->id) }}" method="POST" style="display:inline;">
-                                    @csrf @method('PUT')
-                                    <button type="submit" class="btn btn-small btn-danger btn-icon" title="Tolak">
-                                        <i class="fa-solid fa-xmark"></i>
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
+                                </td>
+                            </tr>
                         @empty
-                        <tr>
-                            <td colspan="5" style="text-align: center;">Tidak ada setoran untuk divalidasi.</td>
-                        </tr>
+                            <tr>
+                                <td colspan="5" style="text-align: center;">Tidak ada setoran untuk divalidasi.</td>
+                            </tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -169,27 +264,31 @@
                     </thead>
                     <tbody>
                         @forelse($kategoris as $kat)
-                        <tr>
-                            <td><strong>{{ $kat->nama_kategori }}</strong></td>
-                            <td>{{ $kat->deskripsi ?? '-' }}</td>
-                            <td><span class="badge badge-success">{{ $kat->poin_per_kg }} Poin / Kg</span></td>
-                            <td class="action-buttons">
-                                <button class="btn btn-small btn-outline btn-icon" onclick="editKategori({{ $kat->id }})">
-                                    <i class="fa-solid fa-pen"></i>
-                                </button>
-                                <form action="{{ route('admin.kategori.destroy', $kat->id) }}" method="POST" style="display:inline">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="btn btn-small btn-danger btn-icon" 
-                                            onclick="return confirm('Yakin hapus kategori ini?')">
-                                        <i class="fa-solid fa-trash"></i>
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
+                            <tr>
+                                <td><strong>{{ $kat->nama_kategori }}</strong></td>
+                                <td>{{ $kat->deskripsi ?? '-' }}</td>
+                                <td><span class="badge badge-success">{{ $kat->poin_per_kg }} Poin / Kg</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn btn-small btn-outline btn-icon"
+                                            onclick="editKategori({{ $kat->id }})">
+                                            <i class="fa-solid fa-pen"></i>
+                                        </button>
+                                        <form action="{{ route('admin.kategori.destroy', $kat->id) }}" method="POST"
+                                            style="display:inline">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="btn btn-small btn-danger btn-icon"
+                                                onclick="return confirm('Yakin hapus kategori ini?')">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
                         @empty
-                        <tr>
-                            <td colspan="4" style="text-align: center;">Belum ada data kategori.</td>
-                        </tr>
+                            <tr>
+                                <td colspan="4" style="text-align: center;">Belum ada data kategori.</td>
+                            </tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -216,27 +315,31 @@
                     </thead>
                     <tbody>
                         @forelse($setoransPending as $setoran)
-                        <tr>
-                            <td>
-                                <strong>#{{ $setoran->id }}</strong><br>
-                                <span class="text-sm">{{ optional($setoran->user)->no_kamar ?? '-' }} ({{ optional($setoran->user)->name ?? 'Tidak Dikenal' }})</span>
-                            </td>
-                            <td><span class="badge badge-info">{{ $setoran->kategori->nama_kategori ?? '-' }}</span></td>
-                            <td>{{ $setoran->estimasi_berat ?? '-' }} Kg</td>
-                            <td class="action-buttons">
-                                @if(!$setoran->jadwal_id)
-                                    <button class="btn btn-small btn-outline" onclick="openJadwalSetoranModal({{ $setoran->id }})">
-                                        <i class="fa-solid fa-calendar-plus"></i> Jadwalkan
-                                    </button>
-                                @else
-                                    <span class="badge badge-info">Sudah Dijadwalkan</span>
-                                @endif
-                            </td>
-                        </tr>
+                            <tr>
+                                <td>
+                                    <strong>#{{ $setoran->id }}</strong><br>
+                                    <span class="text-sm">{{ optional($setoran->user)->no_kamar ?? '-' }}
+                                        ({{ optional($setoran->user)->name ?? 'Tidak Dikenal' }})</span>
+                                </td>
+                                <td><span class="badge badge-info">{{ $setoran->kategori->nama_kategori ?? '-' }}</span></td>
+                                <td>{{ $setoran->estimasi_berat ?? '-' }} Kg</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        @if(!$setoran->jadwal_id)
+                                            <button class="btn btn-small btn-outline"
+                                                onclick="openJadwalSetoranModal({{ $setoran->id }})">
+                                                <i class="fa-solid fa-calendar-plus"></i> Jadwalkan
+                                            </button>
+                                        @else
+                                            <span class="badge badge-info">Sudah Dijadwalkan</span>
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
                         @empty
-                        <tr>
-                            <td colspan="4" style="text-align: center;">Tidak ada setoran pending.</td>
-                        </tr>
+                            <tr>
+                                <td colspan="4" style="text-align: center;">Tidak ada setoran pending.</td>
+                            </tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -245,86 +348,119 @@
     </div>
 
     <!-- Tab: Kelola Reward & Penukaran -->
-        <div id="reward-admin" class="tab-content {{ $activeTab == 'reward-admin' ? 'active' : '' }}">
-            <!-- Panel Katalog Reward -->
-            <div class="panel">
-                <div class="panel-header">
-                    <h3 class="panel-title">Katalog Reward</h3>
-                    <button class="btn btn-small" onclick="openRewardModal()">
-                        <i class="fa-solid fa-plus"></i> Tambah Item
-                    </button>
-                </div>
-                <div class="table-responsive">
-                    <table>
-                        <thead><tr><th>Item</th><th>Poin</th><th>Stok</th><th>Aksi</th></tr></thead>
-                        <tbody>
-                            @forelse($rewards as $item)
+    <div id="reward-admin" class="tab-content {{ $activeTab == 'reward-admin' ? 'active' : '' }}">
+        <!-- Panel Katalog Reward -->
+        <div class="panel">
+            <div class="panel-header">
+                <h3 class="panel-title">Katalog Reward</h3>
+                <button class="btn btn-small" onclick="openRewardModal()">
+                    <i class="fa-solid fa-plus"></i> Tambah Item
+                </button>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Poin</th>
+                            <th>Stok</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($rewards as $item)
                             <tr>
-                                <td><strong>{{ $item->nama_item }}</strong><br><span class="text-sm">{{ $item->deskripsi ?? '-' }}</span></td>
+                                <td><strong>{{ $item->nama_item }}</strong><br><span
+                                        class="text-sm">{{ $item->deskripsi ?? '-' }}</span></td>
                                 <td>{{ $item->poin_diperlukan }} Poin</td>
                                 <td>{{ $item->stok }}</td>
-                                <td class="action-buttons">
-                                    <button class="btn btn-small btn-outline btn-icon" onclick="editReward({{ $item->id }})">
-                                        <i class="fa-solid fa-pen"></i>
-                                    </button>
-                                    <form action="{{ route('admin.reward.destroy', $item->id) }}" method="POST" style="display:inline">
-                                        @csrf @method('DELETE')
-                                        <button class="btn btn-small btn-danger btn-icon" onclick="return confirm('Yakin hapus?')"><i class="fa-solid fa-trash"></i></button>
-                                    </form>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn btn-small btn-outline btn-icon"
+                                            onclick="editReward({{ $item->id }})">
+                                            <i class="fa-solid fa-pen"></i>
+                                        </button>
+                                        <form action="{{ route('admin.reward.destroy', $item->id) }}" method="POST"
+                                            style="display:inline">
+                                            @csrf @method('DELETE')
+                                            <button class="btn btn-small btn-danger btn-icon"
+                                                onclick="return confirm('Yakin hapus?')"><i
+                                                    class="fa-solid fa-trash"></i></button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
-                            @empty
-                            <tr><td colspan="4" class="text-center">Belum ada item reward.</td></tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-               <!-- Tab Validasi Penukaran -->
-            <div class="panel" style="margin-top: 24px;">
-                <div class="panel-header">
-                    <h3 class="panel-title">Validasi Penukaran Poin</h3>
-                </div>
-                <div class="table-responsive">
-                    <table>
-                        <thead><tr><th>Penghuni</th><th>Item</th><th>Jumlah</th><th>Total Poin</th><th>Aksi</th></tr></thead>
-                        <tbody>
-                            @forelse($penukarans as $p)
+                        @empty
                             <tr>
-                                <td>{{ $p->user->name }}</td>
+                                <td colspan="4" class="text-center">Belum ada item reward.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab Validasi Penukaran -->
+        <div class="panel" style="margin-top: 24px;">
+            <div class="panel-header">
+                <h3 class="panel-title">Validasi Penukaran Poin</h3>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Penghuni</th>
+                            <th>Item</th>
+                            <th>Jumlah</th>
+                            <th>Total Poin</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($penukarans as $p)
+                            <tr>
+                                <td>
+                                    <strong>{{ $p->user->name }}</strong><br>
+                                    <span class="text-sm" style="color: var(--text-muted);">Sisa Poin:
+                                        {{ $p->user->saldo_poin }} Poin</span>
+                                </td>
                                 <td>{{ $p->kategoriReward->nama_item }}</td>
                                 <td>{{ $p->jumlah }}</td>
                                 <td>{{ $p->total_poin }}</td>
                                 <td>
                                     <div style="display: flex; align-items: center; gap: 8px;">
-                                        <form action="{{ route('admin.reward.proses-penukaran', $p->id) }}" method="POST" style="display:inline-flex; gap:8px; margin:0;">
+                                        <form action="{{ route('admin.reward.proses-penukaran', $p->id) }}" method="POST"
+                                            style="display:inline-flex; gap:8px; margin:0;">
                                             @csrf @method('PUT')
                                             <input type="hidden" name="status" value="disetujui">
                                             <button class="btn btn-small" style="background: var(--primary);">Setujui</button>
                                         </form>
-                                        <form action="{{ route('admin.reward.proses-penukaran', $p->id) }}" method="POST" style="display:inline-flex; margin:0;">
+                                        <form action="{{ route('admin.reward.proses-penukaran', $p->id) }}" method="POST"
+                                            style="display:inline-flex; margin:0;">
                                             @csrf @method('PUT')
                                             <input type="hidden" name="status" value="ditolak">
-                                            <button class="btn btn-small btn-danger btn-icon" title="Tolak"><i class="fa-solid fa-xmark"></i></button>
+                                            <button class="btn btn-small btn-danger btn-icon" title="Tolak"><i
+                                                    class="fa-solid fa-xmark"></i></button>
                                         </form>
                                     </div>
                                 </td>
                             </tr>
-                            @empty
-                            <tr><td colspan="5" class="text-center">Tidak ada penukaran menunggu.</td></tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="text-center">Tidak ada penukaran menunggu.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
         </div>
+    </div>
 
     <!-- Modal Reward -->
     <div id="rewardModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
-                background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
+                        background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
         <div style="background:white; border-radius:16px; width:90%; max-width:540px; padding:32px;
-                    box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+                            box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
             <h3 style="margin-top:0;" id="rewardModalTitle">Tambah Item Reward</h3>
             <form id="rewardForm" method="POST">
                 @csrf
@@ -339,21 +475,23 @@
                 </div>
                 <div class="form-group">
                     <label>Poin Diperlukan</label>
-                    <input type="number" name="poin_diperlukan" id="reward_poin_diperlukan" class="form-control" min="1" required>
+                    <input type="number" name="poin_diperlukan" id="reward_poin_diperlukan" class="form-control" min="1"
+                        required>
                 </div>
                 <div class="form-group">
                     <label>Stok</label>
                     <input type="number" name="stok" id="reward_stok" class="form-control" min="0" required>
                 </div>
                 <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
-                    <button type="button" class="btn btn-outline" style="width:auto;" onclick="closeRewardModal()">Batal</button>
+                    <button type="button" class="btn btn-outline" style="width:auto;"
+                        onclick="closeRewardModal()">Batal</button>
                     <button type="submit" class="btn" style="width:auto;">Simpan</button>
                 </div>
             </form>
         </div>
     </div>
 
-<!-- Tab: Kelola Artikel -->
+    <!-- Tab: Kelola Artikel -->
     <div id="artikel-admin" class="tab-content {{ $activeTab == 'artikel-admin' ? 'active' : '' }}">
         <div class="panel">
             <div class="panel-header">
@@ -365,30 +503,42 @@
             <div class="table-responsive">
                 <table>
                     <thead>
-                        <tr><th>Judul / Isi</th><th>Tanggal</th><th>Aksi</th></tr>
+                        <tr>
+                            <th>Judul / Isi</th>
+                            <th>Tanggal</th>
+                            <th>Aksi</th>
+                        </tr>
                     </thead>
                     <tbody>
                         @forelse($artikels as $artikel)
-                        <tr>
-                            <td>
-                                <strong>{{ $artikel->judul }}</strong><br>
-                                <span class="text-sm">{{ Str::limit(strip_tags($artikel->isi), 100) }}</span>
-                            </td>
-                            <td>{{ optional($artikel->tanggal_terbit)->format('d M Y') ?? $artikel->created_at->format('d M Y') }}</td>
-                            <td class="action-buttons">
-                                <button class="btn btn-small btn-outline btn-icon" onclick="editArtikel({{ $artikel->id }})">
-                                    <i class="fa-solid fa-pen"></i>
-                                </button>
-                                <form action="{{ route('admin.artikel.destroy', $artikel->id) }}" method="POST" style="display:inline">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="btn btn-small btn-danger btn-icon" onclick="return confirm('Yakin hapus?')">
-                                        <i class="fa-solid fa-trash"></i>
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
+                            <tr>
+                                <td>
+                                    <strong>{{ $artikel->judul }}</strong><br>
+                                    <span class="text-sm">{{ Str::limit(strip_tags($artikel->isi), 100) }}</span>
+                                </td>
+                                <td>{{ optional($artikel->tanggal_terbit)->format('d M Y') ?? $artikel->created_at->format('d M Y') }}
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn btn-small btn-outline btn-icon"
+                                            onclick="editArtikel({{ $artikel->id }})">
+                                            <i class="fa-solid fa-pen"></i>
+                                        </button>
+                                        <form action="{{ route('admin.artikel.destroy', $artikel->id) }}" method="POST"
+                                            style="display:inline">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="btn btn-small btn-danger btn-icon"
+                                                onclick="return confirm('Yakin hapus?')">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
                         @empty
-                        <tr><td colspan="3" style="text-align: center;">Belum ada artikel.</td></tr>
+                            <tr>
+                                <td colspan="3" style="text-align: center;">Belum ada artikel.</td>
+                            </tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -396,63 +546,76 @@
         </div>
     </div>
 
-<!-- Tab: Kelola Pengguna -->
-<div id="pengguna-admin" class="tab-content {{ $activeTab == 'pengguna-admin' ? 'active' : '' }}">
-    <div class="panel">
-        <div class="panel-header">
-            <h3 class="panel-title">Manajemen Pengguna</h3>
-            <button class="btn btn-small" onclick="openUserModal()">
-                <i class="fa-solid fa-user-plus"></i> Tambah Akun
-            </button>
-        </div>
-        <div class="table-responsive">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Nama</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th>No. Kamar</th>
-                        <th>Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($users as $user)
-                    <tr>
-                        <td><strong>{{ $user->name }}</strong></td>
-                        <td>{{ $user->email }}</td>
-                        <td>
-                            <span class="badge {{ $user->role == 'admin' ? 'badge-info' : ($user->role == 'petugas' ? 'badge-warning' : 'badge-success') }}">
-                                {{ ucfirst($user->role) }}
-                            </span>
-                        </td>
-                        <td>{{ $user->no_kamar ?? '-' }}</td>
-                        <td class="action-buttons">
-                            <button class="btn btn-small btn-outline btn-icon" onclick="editUser({{ $user->id }})">
-                                <i class="fa-solid fa-pen"></i>
-                            </button>   
-                            @if($user->id !== auth()->id())
-                            <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" style="display:inline">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="btn btn-small btn-danger btn-icon" onclick="return confirm('Yakin hapus pengguna ini?')">
-                                    <i class="fa-solid fa-trash"></i>
-                                </button>
-                            </form>
-                            @endif
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="5" style="text-align: center;">Belum ada data pengguna.</td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
+    <!-- Tab: Kelola Pengguna -->
+    <div id="pengguna-admin" class="tab-content {{ $activeTab == 'pengguna-admin' ? 'active' : '' }}">
+        <div class="panel">
+            <div class="panel-header">
+                <h3 class="panel-title">Manajemen Pengguna</h3>
+                <button class="btn btn-small" onclick="openUserModal()">
+                    <i class="fa-solid fa-user-plus"></i> Tambah Akun
+                </button>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nama</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>No. Kamar</th>
+                            <th>Poin</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($users as $user)
+                            <tr>
+                                <td><strong>{{ $user->name }}</strong></td>
+                                <td>{{ $user->email }}</td>
+                                <td>
+                                    <span
+                                        class="badge {{ $user->role == 'admin' ? 'badge-info' : ($user->role == 'petugas' ? 'badge-warning' : 'badge-success') }}">
+                                        {{ ucfirst($user->role) }}
+                                    </span>
+                                </td>
+                                <td>{{ $user->no_kamar ?? '-' }}</td>
+                                <td>
+                                    @if($user->isResident())
+                                        <strong>{{ $user->saldo_poin }}</strong> <span class="text-sm">Poin</span>
+                                    @else
+                                        -
+                                    @endif
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn btn-small btn-outline btn-icon" onclick="editUser({{ $user->id }})">
+                                            <i class="fa-solid fa-pen"></i>
+                                        </button>
+                                        @if($user->id !== auth()->id())
+                                            <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST"
+                                                style="display:inline">
+                                                @csrf @method('DELETE')
+                                                <button type="submit" class="btn btn-small btn-danger btn-icon"
+                                                    onclick="return confirm('Yakin hapus pengguna ini?')">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" style="text-align: center;">Belum ada data pengguna.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-</div>
 
- <!-- Tab: Laporan -->
+    <!-- Tab: Laporan -->
     <div id="laporan-admin" class="tab-content {{ $activeTab == 'laporan-admin' ? 'active' : '' }}">
         <div class="card-grid">
             <div class="card">
@@ -461,13 +624,17 @@
                 </div>
                 <div class="card-info">
                     <h3>Total Sampah Masuk</h3>
-                    <div class="value">{{ number_format($totalSampahTerkumpul, 1) }}<span style="font-size:16px; font-weight:600; color:var(--text-muted); margin-left:4px;">Kg</span></div>
+                    <div class="value">{{ number_format($totalSampahTerkumpul, 1) }}<span
+                            style="font-size:16px; font-weight:600; color:var(--text-muted); margin-left:4px;">Kg</span>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="panel">
-            <div class="panel-header"><h3 class="panel-title">Grafik Volume Sampah per Bulan</h3></div>
+            <div class="panel-header">
+                <h3 class="panel-title">Grafik Volume Sampah per Bulan</h3>
+            </div>
             <div class="panel-body">
                 <div class="chart-container">
                     <canvas id="barChart" style="max-height: 400px;"></canvas>
@@ -476,7 +643,9 @@
         </div>
 
         <div class="panel" style="margin-top: 24px;">
-            <div class="panel-header"><h3 class="panel-title">Komposisi Kategori Sampah</h3></div>
+            <div class="panel-header">
+                <h3 class="panel-title">Komposisi Kategori Sampah</h3>
+            </div>
             <div class="panel-body">
                 <div class="chart-container">
                     <canvas id="pieChart" style="max-height: 400px;"></canvas>
@@ -484,11 +653,11 @@
             </div>
         </div>
     </div>
-<!-- ===================== MODAL KATEGORI ===================== -->
+    <!-- ===================== MODAL KATEGORI ===================== -->
     <div id="kategoriModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
-                background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
+                        background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
         <div style="background:white; border-radius:16px; width:90%; max-width:500px; padding:32px; 
-                    box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+                            box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
             <h3 style="margin-top:0;" id="modalTitle">Tambah Kategori</h3>
             <form id="kategoriForm" method="POST">
                 @csrf
@@ -506,7 +675,8 @@
                     <input type="number" name="poin_per_kg" id="poin_per_kg" class="form-control" required>
                 </div>
                 <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
-                    <button type="button" class="btn btn-outline" style="width:auto;" onclick="closeKategoriModal()">Batal</button>
+                    <button type="button" class="btn btn-outline" style="width:auto;"
+                        onclick="closeKategoriModal()">Batal</button>
                     <button type="submit" class="btn" style="width:auto;">Simpan</button>
                 </div>
             </form>
@@ -514,11 +684,11 @@
     </div>
 
 
-        <!-- Modal Jadwal Setoran -->
+    <!-- Modal Jadwal Setoran -->
     <div id="jadwalSetoranModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
-                background:rgba(0,0,0,0.5); z-index:1001; justify-content:center; align-items:center;">
+                        background:rgba(0,0,0,0.5); z-index:1001; justify-content:center; align-items:center;">
         <div style="background:white; border-radius:16px; width:90%; max-width:500px; padding:32px; 
-                    box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+                            box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
             <h3 style="margin-top:0;" id="jadwalSetoranModalTitle">Jadwalkan Penjemputan</h3>
             <form id="jadwalSetoranForm" method="POST">
                 @csrf
@@ -548,7 +718,8 @@
                     <textarea name="keterangan" id="keterangan_jemput" class="form-control" rows="2"></textarea>
                 </div>
                 <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
-                    <button type="button" class="btn btn-outline" style="width:auto;" onclick="closeJadwalSetoranModal()">Batal</button>
+                    <button type="button" class="btn btn-outline" style="width:auto;"
+                        onclick="closeJadwalSetoranModal()">Batal</button>
                     <button type="submit" class="btn" style="width:auto;">Simpan Jadwal</button>
                 </div>
             </form>
@@ -557,9 +728,9 @@
 
     <!-- Modal Jadwal -->
     <div id="jadwalModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
-                background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
+                        background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
         <div style="background:white; border-radius:16px; width:90%; max-width:500px; padding:32px; 
-                    box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+                            box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
             <h3 style="margin-top:0;" id="jadwalModalTitle">Tambah Jadwal</h3>
             <form id="jadwalForm" method="POST">
                 @csrf
@@ -590,7 +761,8 @@
                     <textarea name="keterangan" id="jadwal_keterangan" class="form-control" rows="2"></textarea>
                 </div>
                 <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
-                    <button type="button" class="btn btn-outline" style="width:auto;" onclick="closeJadwalModal()">Batal</button>
+                    <button type="button" class="btn btn-outline" style="width:auto;"
+                        onclick="closeJadwalModal()">Batal</button>
                     <button type="submit" class="btn" style="width:auto;">Simpan</button>
                 </div>
             </form>
@@ -599,9 +771,9 @@
 
     <!-- Modal Artikel -->
     <div id="artikelModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
-                background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
+                        background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
         <div style="background:white; border-radius:16px; width:90%; max-width:600px; padding:32px; 
-                    box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+                            box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
             <h3 style="margin-top:0;" id="artikelModalTitle">Tulis Artikel</h3>
             <form id="artikelForm" method="POST" enctype="multipart/form-data">
                 @csrf
@@ -623,289 +795,308 @@
                     <input type="file" name="gambar" id="artikel_gambar" class="form-control" accept="image/*">
                 </div>
                 <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
-                    <button type="button" class="btn btn-outline" style="width:auto;" onclick="closeArtikelModal()">Batal</button>
+                    <button type="button" class="btn btn-outline" style="width:auto;"
+                        onclick="closeArtikelModal()">Batal</button>
                     <button type="submit" class="btn" style="width:auto;">Simpan</button>
                 </div>
             </form>
         </div>
     </div>
 
- <!-- Modal Pengguna -->
-<div id="userModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
-            background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
-    <div style="background:white; border-radius:16px; width:90%; max-width:500px; padding:0; 
-                box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
-        <div style="padding:32px; max-height:80vh; overflow-y:auto;">
-            <h3 style="margin-top:0;" id="userModalTitle">Tambah Akun</h3>
-            <form id="userForm" method="POST">
-                @csrf
-                <div id="userMethodField"></div>
-                <div class="form-group">
-                    <label>Nama</label>
-                    <input type="text" name="name" id="user_name" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" name="email" id="user_email" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" name="password" id="user_password" class="form-control">
-                    <span class="text-sm">Kosongkan jika tidak ingin mengubah password.</span>
-                </div>
-                <div class="form-group">
-                    <label>Role</label>
-                    <select name="role" id="user_role" class="form-control" required>
-                        <option value="resident">Resident</option>
-                        <option value="petugas">Petugas</option>
-                        <option value="admin">Admin</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>No. WA</label>
-                    <input type="text" name="no_wa" id="user_no_wa" class="form-control">
-                </div>
-                <div class="form-group">
-                    <label>No. Kamar</label>
-                    <input type="text" name="no_kamar" id="user_no_kamar" class="form-control">
-                </div>
-                <div class="form-group">
-                    <label>Nama Kos</label>
-                    <input type="text" name="nama_kos" id="user_nama_kos" class="form-control">
-                </div>
-                <div class="form-group">
-                    <label>Alamat Kos</label>
-                    <input type="text" name="alamat_kos" id="user_alamat_kos" class="form-control">
-                </div>
-                <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
-                    <button type="button" class="btn btn-outline" style="width:auto;" onclick="closeUserModal()">Batal</button>
-                    <button type="submit" class="btn" style="width:auto;">Simpan</button>
-                </div>
-            </form>
+    <!-- Modal Pengguna -->
+    <div id="userModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
+                    background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
+        <div style="background:white; border-radius:16px; width:90%; max-width:500px; padding:0; 
+                        box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+            <div style="padding:32px; max-height:80vh; overflow-y:auto;">
+                <h3 style="margin-top:0;" id="userModalTitle">Tambah Akun</h3>
+                <form id="userForm" method="POST">
+                    @csrf
+                    <div id="userMethodField"></div>
+                    <div class="form-group">
+                        <label>Nama</label>
+                        <input type="text" name="name" id="user_name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" name="email" id="user_email" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" name="password" id="user_password" class="form-control">
+                        <span class="text-sm">Kosongkan jika tidak ingin mengubah password.</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Role</label>
+                        <select name="role" id="user_role" class="form-control" required>
+                            <option value="petugas">Petugas</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>No. WA</label>
+                        <input type="text" name="no_wa" id="user_no_wa" class="form-control">
+                    </div>
+                    <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
+                        <button type="button" class="btn btn-outline" style="width:auto;"
+                            onclick="closeUserModal()">Batal</button>
+                        <button type="submit" class="btn" style="width:auto;">Simpan</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div>
+
+    <!-- Modal Image Preview -->
+    <div id="imagePreviewModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
+                    background:rgba(0,0,0,0.8); z-index:2000; justify-content:center; align-items:center;">
+        <span
+            style="position:absolute; top:20px; right:30px; color:white; font-size:40px; font-weight:bold; cursor:pointer;"
+            onclick="closeImagePreview()">&times;</span>
+        <img id="imagePreviewSrc" src=""
+            style="max-width:90%; max-height:90%; border-radius:8px; box-shadow:0 5px 15px rgba(0,0,0,0.5);">
+    </div>
 
 @endsection
 
 @push('scripts')
-<script>
-// ----- Modal Kategori -----
-    function openKategoriModal() {
-        document.getElementById('modalTitle').innerText = 'Tambah Kategori';
-        document.getElementById('kategoriForm').action = "{{ route('admin.kategori.store') }}";
-        document.getElementById('methodField').innerHTML = '';
-        document.getElementById('nama_kategori').value = '';
-        document.getElementById('deskripsi').value = '';
-        document.getElementById('poin_per_kg').value = '';
-        document.getElementById('kategoriModal').style.display = 'flex';
-    }
-
-    async function editKategori(id) {
-        try {
-            const response = await fetch(`/admin/kategori/${id}/edit`, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                }
-            });
-            if (!response.ok) throw new Error('Gagal mengambil data');
-            const data = await response.json();
-
-            document.getElementById('modalTitle').innerText = 'Edit Kategori';
-            document.getElementById('kategoriForm').action = `/admin/kategori/${data.id}`;
-            document.getElementById('methodField').innerHTML = `@csrf @method('PUT')`;
-            document.getElementById('nama_kategori').value = data.nama_kategori;
-            document.getElementById('deskripsi').value = data.deskripsi || '';
-            document.getElementById('poin_per_kg').value = data.poin_per_kg;
+    <script>
+        // ----- Modal Kategori -----
+        function openKategoriModal() {
+            document.getElementById('modalTitle').innerText = 'Tambah Kategori';
+            document.getElementById('kategoriForm').action = "{{ route('admin.kategori.store') }}";
+            document.getElementById('methodField').innerHTML = '';
+            document.getElementById('nama_kategori').value = '';
+            document.getElementById('deskripsi').value = '';
+            document.getElementById('poin_per_kg').value = '';
             document.getElementById('kategoriModal').style.display = 'flex';
-        } catch (error) {
-            alert('Terjadi kesalahan: ' + error.message);
         }
-    }
 
-    function closeKategoriModal() {
-        document.getElementById('kategoriModal').style.display = 'none';
-    }
+        async function editKategori(id) {
+            try {
+                const response = await fetch(`/admin/kategori/${id}/edit`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
+                if (!response.ok) throw new Error('Gagal mengambil data');
+                const data = await response.json();
 
-    document.getElementById('kategoriModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeKategoriModal();
+                document.getElementById('modalTitle').innerText = 'Edit Kategori';
+                document.getElementById('kategoriForm').action = `/admin/kategori/${data.id}`;
+                document.getElementById('methodField').innerHTML = `@csrf @method('PUT')`;
+                document.getElementById('nama_kategori').value = data.nama_kategori;
+                document.getElementById('deskripsi').value = data.deskripsi || '';
+                document.getElementById('poin_per_kg').value = data.poin_per_kg;
+                document.getElementById('kategoriModal').style.display = 'flex';
+            } catch (error) {
+                alert('Terjadi kesalahan: ' + error.message);
+            }
         }
-    });
 
-// ----- Modal Jadwal -----
-    function openJadwalModal() {
-        document.getElementById('jadwalModalTitle').innerText = 'Tambah Jadwal';
-        document.getElementById('jadwalForm').action = "{{ route('admin.jadwal.store') }}";
-        document.getElementById('jadwalMethodField').innerHTML = '';
-        document.getElementById('jadwal_tanggal').value = '';
-        document.getElementById('jadwal_waktu_mulai').value = '';
-        document.getElementById('jadwal_waktu_selesai').value = '';
-        document.getElementById('jadwal_petugas_id').value = '';
-        document.getElementById('jadwal_keterangan').value = '';
-        document.getElementById('jadwalModal').style.display = 'flex';
-    }
+        function closeKategoriModal() {
+            document.getElementById('kategoriModal').style.display = 'none';
+        }
 
-    async function editJadwal(id) {
-        try {
-            const response = await fetch(`/admin/jadwal/${id}/edit`, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                }
-            });
-            if (!response.ok) throw new Error('Gagal mengambil data');
-            const data = await response.json();
+        document.getElementById('kategoriModal').addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeKategoriModal();
+            }
+        });
 
-            document.getElementById('jadwalModalTitle').innerText = 'Edit Jadwal';
-            document.getElementById('jadwalForm').action = `/admin/jadwal/${data.id}`;
-            document.getElementById('jadwalMethodField').innerHTML = `@csrf @method('PUT')`;
-
-            document.getElementById('jadwal_tanggal').value = data.tanggal;
-            document.getElementById('jadwal_waktu_mulai').value = data.waktu_mulai ? data.waktu_mulai.substring(0,5) : '';
-            document.getElementById('jadwal_waktu_selesai').value = data.waktu_selesai ? data.waktu_selesai.substring(0,5) : '';
-            document.getElementById('jadwal_petugas_id').value = data.petugas_id ?? '';
-            document.getElementById('jadwal_keterangan').value = data.keterangan ?? '';
+        // ----- Modal Jadwal -----
+        function openJadwalModal() {
+            document.getElementById('jadwalModalTitle').innerText = 'Tambah Jadwal';
+            document.getElementById('jadwalForm').action = "{{ route('admin.jadwal.store') }}";
+            document.getElementById('jadwalMethodField').innerHTML = '';
+            document.getElementById('jadwal_tanggal').value = '';
+            document.getElementById('jadwal_waktu_mulai').value = '';
+            document.getElementById('jadwal_waktu_selesai').value = '';
+            document.getElementById('jadwal_petugas_id').value = '';
+            document.getElementById('jadwal_keterangan').value = '';
             document.getElementById('jadwalModal').style.display = 'flex';
-        } catch (error) {
-            alert('Terjadi kesalahan: ' + error.message);
         }
-    }
 
-    function closeJadwalModal() {
-        document.getElementById('jadwalModal').style.display = 'none';
-    }
+        async function editJadwal(id) {
+            try {
+                const response = await fetch(`/admin/jadwal/${id}/edit`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
+                if (!response.ok) throw new Error('Gagal mengambil data');
+                const data = await response.json();
 
-    document.getElementById('jadwalModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeJadwalModal();
+                document.getElementById('jadwalModalTitle').innerText = 'Edit Jadwal';
+                document.getElementById('jadwalForm').action = `/admin/jadwal/${data.id}`;
+                document.getElementById('jadwalMethodField').innerHTML = `@csrf @method('PUT')`;
+
+                let parseTime = function (val) {
+                    if (!val) return '';
+                    if (val.includes('T')) {
+                        return val.split('T')[1].substring(0, 5);
+                    }
+                    if (val.includes(' ')) {
+                        return val.split(' ')[1].substring(0, 5);
+                    }
+                    return val.substring(0, 5);
+                };
+                document.getElementById('jadwal_tanggal').value = data.tanggal;
+                document.getElementById('jadwal_waktu_mulai').value = parseTime(data.waktu_mulai);
+                document.getElementById('jadwal_waktu_selesai').value = parseTime(data.waktu_selesai);
+                document.getElementById('jadwal_petugas_id').value = data.petugas_id ?? '';
+                document.getElementById('jadwal_keterangan').value = data.keterangan ?? '';
+                document.getElementById('jadwalModal').style.display = 'flex';
+            } catch (error) {
+                alert('Terjadi kesalahan: ' + error.message);
+            }
         }
-    });
 
-// ----- Modal Jadwal Setoran -----
-    function openJadwalSetoranModal(setoranId) {
-               document.getElementById('jadwalSetoranForm').action = `/admin/setoran/${setoranId}/jadwalkan`;
-                document.getElementById('tanggal_jemput').value = '';
-                document.getElementById('waktu_mulai_jemput').value = '';
-                document.getElementById('waktu_selesai_jemput').value = '';
-                document.getElementById('petugas_id_jemput').value = '';
-                document.getElementById('keterangan_jemput').value = '';
-                document.getElementById('jadwalSetoranModal').style.display = 'flex';
+        function closeJadwalModal() {
+            document.getElementById('jadwalModal').style.display = 'none';
+        }
+
+        document.getElementById('jadwalModal').addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeJadwalModal();
+            }
+        });
+
+        // ----- Modal Jadwal Setoran -----
+        function openJadwalSetoranModal(setoranId) {
+            document.getElementById('jadwalSetoranForm').action = `/admin/setoran/${setoranId}/jadwalkan`;
+            document.getElementById('tanggal_jemput').value = '';
+            document.getElementById('waktu_mulai_jemput').value = '';
+            document.getElementById('waktu_selesai_jemput').value = '';
+            document.getElementById('petugas_id_jemput').value = '';
+            document.getElementById('keterangan_jemput').value = '';
+            document.getElementById('jadwalSetoranModal').style.display = 'flex';
         }
 
         function closeJadwalSetoranModal() {
             document.getElementById('jadwalSetoranModal').style.display = 'none';
         }
 
-        document.getElementById('jadwalSetoranModal').addEventListener('click', function(e) {
+        document.getElementById('jadwalSetoranModal').addEventListener('click', function (e) {
             if (e.target === this) {
                 closeJadwalSetoranModal();
             }
         });
 
-    // ----- Modal Reward -----
-    function openRewardModal() {
-        document.getElementById('rewardModalTitle').innerText = 'Tambah Item Reward';
-        document.getElementById('rewardForm').action = "{{ route('admin.reward.store') }}";
-        document.getElementById('rewardMethodField').innerHTML = '';
-        document.getElementById('reward_nama_item').value = '';
-        document.getElementById('reward_deskripsi').value = '';
-        document.getElementById('reward_poin_diperlukan').value = '';
-        document.getElementById('reward_stok').value = '';
-        document.getElementById('rewardModal').style.display = 'flex';
-    }
-
-    async function editReward(id) {
-        try {
-            const response = await fetch(`/admin/reward/${id}/edit`, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                }
-            });
-            if (!response.ok) throw new Error('Gagal mengambil data');
-            const data = await response.json();
-
-            document.getElementById('rewardModalTitle').innerText = 'Edit Item Reward';
-            document.getElementById('rewardForm').action = `/admin/reward/${data.id}`;
-            document.getElementById('rewardMethodField').innerHTML = `@csrf @method('PUT')`;
-            document.getElementById('reward_nama_item').value = data.nama_item;
-            document.getElementById('reward_deskripsi').value = data.deskripsi || '';
-            document.getElementById('reward_poin_diperlukan').value = data.poin_diperlukan;
-            document.getElementById('reward_stok').value = data.stok;
+        // ----- Modal Reward -----
+        function openRewardModal() {
+            document.getElementById('rewardModalTitle').innerText = 'Tambah Item Reward';
+            document.getElementById('rewardForm').action = "{{ route('admin.reward.store') }}";
+            document.getElementById('rewardMethodField').innerHTML = '';
+            document.getElementById('reward_nama_item').value = '';
+            document.getElementById('reward_deskripsi').value = '';
+            document.getElementById('reward_poin_diperlukan').value = '';
+            document.getElementById('reward_stok').value = '';
             document.getElementById('rewardModal').style.display = 'flex';
-        } catch (error) {
-            alert('Terjadi kesalahan: ' + error.message);
         }
-    }
 
-    function closeRewardModal() {
-        document.getElementById('rewardModal').style.display = 'none';
-    }
+        async function editReward(id) {
+            try {
+                const response = await fetch(`/admin/reward/${id}/edit`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
+                if (!response.ok) throw new Error('Gagal mengambil data');
+                const data = await response.json();
 
-    document.getElementById('rewardModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeRewardModal();
+                document.getElementById('rewardModalTitle').innerText = 'Edit Item Reward';
+                document.getElementById('rewardForm').action = `/admin/reward/${data.id}`;
+                document.getElementById('rewardMethodField').innerHTML = `@csrf @method('PUT')`;
+                document.getElementById('reward_nama_item').value = data.nama_item;
+                document.getElementById('reward_deskripsi').value = data.deskripsi || '';
+                document.getElementById('reward_poin_diperlukan').value = data.poin_diperlukan;
+                document.getElementById('reward_stok').value = data.stok;
+                document.getElementById('rewardModal').style.display = 'flex';
+            } catch (error) {
+                alert('Terjadi kesalahan: ' + error.message);
+            }
         }
-    });
 
-// ----- Modal Pengguna -----
-function openUserModal() {
-    document.getElementById('userModalTitle').innerText = 'Tambah Akun';
-    document.getElementById('userForm').action = "{{ route('admin.users.store') }}";
-    document.getElementById('userMethodField').innerHTML = '';
-    document.getElementById('user_name').value = '';
-    document.getElementById('user_email').value = '';
-    document.getElementById('user_password').value = '';
-    document.getElementById('user_role').value = 'resident';
-    document.getElementById('user_no_wa').value = '';
-    document.getElementById('user_no_kamar').value = '';
-    document.getElementById('user_nama_kos').value = '';
-    document.getElementById('user_alamat_kos').value = '';
-    document.getElementById('userModal').style.display = 'flex';
-}
+        function closeRewardModal() {
+            document.getElementById('rewardModal').style.display = 'none';
+        }
 
-async function editUser(id) {
-    try {
-        const response = await fetch(`/admin/users/${id}/edit`, {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
+        document.getElementById('rewardModal').addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeRewardModal();
             }
         });
-        if (!response.ok) throw new Error('Gagal mengambil data');
-        const data = await response.json();
 
-        document.getElementById('userModalTitle').innerText = 'Edit Akun';
-        document.getElementById('userForm').action = `/admin/users/${data.id}`;
-        document.getElementById('userMethodField').innerHTML = `@csrf @method('PUT')`;
-        document.getElementById('user_name').value = data.name;
-        document.getElementById('user_email').value = data.email;
-        document.getElementById('user_password').value = '';
-        document.getElementById('user_role').value = data.role;
-        document.getElementById('user_no_wa').value = data.no_wa || '';
-        document.getElementById('user_no_kamar').value = data.no_kamar || '';
-        document.getElementById('user_nama_kos').value = data.nama_kos || '';
-        document.getElementById('user_alamat_kos').value = data.alamat_kos || '';
-        document.getElementById('userModal').style.display = 'flex';
-    } catch (error) {
-        alert('Terjadi kesalahan: ' + error.message);
-    }
-}
+        // ----- Modal Pengguna -----
+        function openUserModal() {
+            document.getElementById('userModalTitle').innerText = 'Tambah Akun';
+            document.getElementById('userForm').action = "{{ route('admin.users.store') }}";
+            document.getElementById('userMethodField').innerHTML = '';
+            document.getElementById('user_name').value = '';
+            document.getElementById('user_email').value = '';
+            document.getElementById('user_password').value = '';
+            document.getElementById('user_role').value = 'petugas';
+            document.getElementById('user_no_wa').value = '';
+            document.getElementById('userModal').style.display = 'flex';
+        }
 
-function closeUserModal() {
-    document.getElementById('userModal').style.display = 'none';
-}
+        async function editUser(id) {
+            try {
+                const response = await fetch(`/admin/users/${id}/edit`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
+                if (!response.ok) throw new Error('Gagal mengambil data');
+                const data = await response.json();
 
-document.getElementById('userModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeUserModal();
-    }
-});
-    
-// ----- Modal Artikel -----
-    function openArtikelModal() {
+                document.getElementById('userModalTitle').innerText = 'Edit Akun';
+                document.getElementById('userForm').action = `/admin/users/${data.id}`;
+                document.getElementById('userMethodField').innerHTML = `@csrf @method('PUT')`;
+                document.getElementById('user_name').value = data.name;
+                document.getElementById('user_email').value = data.email;
+                document.getElementById('user_password').value = '';
+                document.getElementById('user_role').value = data.role;
+                document.getElementById('user_no_wa').value = data.no_wa || '';
+                document.getElementById('userModal').style.display = 'flex';
+            } catch (error) {
+                alert('Terjadi kesalahan: ' + error.message);
+            }
+        }
+
+        function closeUserModal() {
+            document.getElementById('userModal').style.display = 'none';
+        }
+
+        // ----- Image Preview -----
+        function showImagePreview(src) {
+            document.getElementById('imagePreviewSrc').src = src;
+            document.getElementById('imagePreviewModal').style.display = 'flex';
+        }
+
+        function closeImagePreview() {
+            document.getElementById('imagePreviewModal').style.display = 'none';
+        }
+
+        document.getElementById('imagePreviewModal')?.addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeImagePreview();
+            }
+        });
+
+        document.getElementById('userModal').addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeUserModal();
+            }
+        });
+
+        // ----- Modal Artikel -----
+        function openArtikelModal() {
             document.getElementById('artikelModalTitle').innerText = 'Tulis Artikel';
             document.getElementById('artikelForm').action = "{{ route('admin.artikel.store') }}";
             document.getElementById('artikelMethodField').innerHTML = '';
@@ -941,60 +1132,60 @@ document.getElementById('userModal').addEventListener('click', function(e) {
             document.getElementById('artikelModal').style.display = 'none';
         }
 
-        document.getElementById('artikelModal').addEventListener('click', function(e) {
+        document.getElementById('artikelModal').addEventListener('click', function (e) {
             if (e.target === this) closeArtikelModal();
         });
-// skrip garfik js
-// Data dari controller (diambil dari variabel PHP)
-const chartLabels = @json($chartLabels);
-const chartValues = @json($chartValues);
-const pieLabels = @json($pieLabels);
-const pieValues = @json($pieValues);
+        // skrip garfik js
+        // Data dari controller (diambil dari variabel PHP)
+        const chartLabels = @json($chartLabels);
+        const chartValues = @json($chartValues);
+        const pieLabels = @json($pieLabels);
+        const pieValues = @json($pieValues);
 
-// Bar Chart
-const ctxBar = document.getElementById('barChart')?.getContext('2d');
-if (ctxBar) {
-    new Chart(ctxBar, {
-        type: 'bar',
-        data: {
-            labels: chartLabels,
-            datasets: [{
-                label: 'Berat (Kg)',
-                data: chartValues,
-                backgroundColor: 'rgba(16, 185, 129, 0.6)',
-                borderColor: 'rgba(16, 185, 129, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: { beginAtZero: true }
-            }
+        // Bar Chart
+        const ctxBar = document.getElementById('barChart')?.getContext('2d');
+        if (ctxBar) {
+            new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: chartLabels,
+                    datasets: [{
+                        label: 'Berat (Kg)',
+                        data: chartValues,
+                        backgroundColor: 'rgba(16, 185, 129, 0.6)',
+                        borderColor: 'rgba(16, 185, 129, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
         }
-    });
-}
 
-// Pie Chart
-const ctxPie = document.getElementById('pieChart')?.getContext('2d');
-if (ctxPie) {
-    new Chart(ctxPie, {
-        type: 'pie',
-        data: {
-            labels: pieLabels,
-            datasets: [{
-                data: pieValues,
-                backgroundColor: ['#10B981', '#F59E0B', '#3B82F6', '#EF4444', '#8B5CF6'],
-                borderWidth: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { position: 'bottom' }
-            }
+        // Pie Chart
+        const ctxPie = document.getElementById('pieChart')?.getContext('2d');
+        if (ctxPie) {
+            new Chart(ctxPie, {
+                type: 'pie',
+                data: {
+                    labels: pieLabels,
+                    datasets: [{
+                        data: pieValues,
+                        backgroundColor: ['#10B981', '#F59E0B', '#3B82F6', '#EF4444', '#8B5CF6'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
         }
-    });
-}
-</script>
+    </script>
 @endpush

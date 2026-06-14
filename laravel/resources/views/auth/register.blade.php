@@ -5,7 +5,7 @@
 <div class="auth-screen">
     <div class="auth-visual">
         <div class="auth-logo">
-            <img src="{{ asset('image/koscare-logo.jpeg') }}" alt="KosCare Logo">
+            <img src="{{ asset('image/yop.png') }}" alt="KosCare Logo">
         </div>
         <h1>Gabung dengan KosCare</h1>
         <p>Jadilah bagian dari komunitas hijau. Tukarkan sampah Anda menjadi poin yang bermanfaat.</p>
@@ -38,6 +38,16 @@
                         @enderror
                     </div>
                 </div>
+
+                <div class="form-group">
+                    <label for="no_wa">Nomor WhatsApp</label>
+                    <input id="no_wa" type="text" class="form-control @error('no_wa') is-invalid @enderror" 
+                           name="no_wa" value="{{ old('no_wa') }}" required 
+                           placeholder="Cth: 081234567890">
+                    @error('no_wa')
+                        <span class="text-sm" style="color: var(--danger);">{{ $message }}</span>
+                    @enderror
+                </div>
                 <div class="auth-grid-two-column">
                     <div class="form-group">
                         <label for="nama_kos">Nama Kos</label>
@@ -63,7 +73,7 @@
                     <label for="email">Email Aktif</label>
                     <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" 
                            name="email" value="{{ old('email') }}" required autocomplete="email" 
-                           placeholder="budi@kos.id">
+                           placeholder="budi@gmail.com">
                     @error('email')
                         <span class="text-sm" style="color: var(--danger);">{{ $message }}</span>
                     @enderror

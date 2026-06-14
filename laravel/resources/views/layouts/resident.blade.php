@@ -16,12 +16,12 @@
         <!-- Sidebar -->
         <div class="sidebar">
             <div class="sidebar-header">
-                <h2><img src="{{ asset('image/koscare-logo.jpeg') }}" alt="KosCare Logo"> KosCare</h2>
+                <h2><img src="{{ asset('image/yop.png') }}" alt="KosCare Logo"> KosCare</h2>
                 <span>Akses Penghuni</span>
             </div>
             <ul class="menu-list">
                 <li class="menu-item active" onclick="switchTab('penghuni', 'dash-penghuni', this)">
-                    <i class="fa-solid fa-border-all"></i> Ikhtisar
+                    <i class="fa-solid fa-border-all"></i> Beranda
                 </li>
                 <li class="menu-item" onclick="switchTab('penghuni', 'setor-penghuni', this)">
                     <i class="fa-solid fa-recycle"></i> Ajukan Setoran
@@ -49,7 +49,7 @@
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button type="submit" class="btn btn-outline" style="width: 100%;">
-                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Keluar Akun
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Keluar Sistem
                     </button>
                 </form>
             </div>
@@ -61,12 +61,8 @@
                 <button class="topbar-toggle" onclick="toggleSidebar('penghuni')" aria-label="Buka menu">
                     <i class="fa-solid fa-bars"></i>
                 </button>
-                <div class="topbar-title" id="title-penghuni">@yield('page-title', 'Ikhtisar Dashboard')</div>
+                <div class="topbar-title" id="title-penghuni">@yield('page-title', 'Beranda')</div>
                 <div class="topbar-actions">
-                    <div class="notification-btn">
-                        <i class="fa-regular fa-bell"></i>
-                        <div class="notification-dot"></div>
-                    </div>
                     <div class="user-profile" onclick="switchTab('penghuni', 'profile-resident', null)" style="cursor: pointer;">
                         <div class="avatar">
                             {{ Auth::user()->no_kamar ?? '?' }}
@@ -137,6 +133,30 @@
                 topbarTitle.innerText = clone.innerText.trim();
             }
         }
+
+        // Auto-dismiss flash notifications after 3 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.flash-alert');
+            alerts.forEach(function(alert) {
+                setTimeout(function() {
+                    alert.style.maxHeight = alert.offsetHeight + 'px';
+                    alert.style.transition = 'all 0.5s ease';
+                    alert.offsetHeight; // force reflow
+                    
+                    alert.style.opacity = '0';
+                    alert.style.transform = 'translateY(-10px)';
+                    alert.style.maxHeight = '0';
+                    alert.style.paddingTop = '0';
+                    alert.style.paddingBottom = '0';
+                    alert.style.marginTop = '0';
+                    alert.style.marginBottom = '0';
+                    
+                    setTimeout(function() {
+                        alert.remove();
+                    }, 500);
+                }, 3000);
+            });
+        });
     </script>
     @stack('scripts')
 </body>
