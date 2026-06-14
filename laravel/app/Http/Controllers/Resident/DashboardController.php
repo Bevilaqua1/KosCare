@@ -27,7 +27,18 @@ class DashboardController extends Controller
             ->get();
 
         $totalSetoran = $riwayatSetoran->count();
-        $totalPoin = $riwayatSetoran->sum('poin_didapat');
+        // Total poin dari setoran yang sudah selesai
+        $totalPoinDiterima = SetoranSampah::where('user_id', Auth::id())
+            ->where('status', 'selesai')
+            ->sum('poin_didapat');
+
+        // Total poin yang sudah digunakan (penukaran disetujui)
+        $totalPoinDipakai = PenukaranPoin::where('user_id', Auth::id())
+            ->where('status', 'disetujui')
+            ->sum('total_poin');
+
+        // Sisa saldo poin
+        $totalPoin = $totalPoinDiterima - $totalPoinDipakai;
 
         // Semua jadwal (untuk tab Jadwal Angkut) - hanya jadwal yang terkait dengan setoran user saat ini dan status pending
         $jadwals = JadwalPengangkutan::whereHas('setorans', function ($q) {
@@ -71,7 +82,7 @@ class DashboardController extends Controller
             'jadwalTerdekat',
             'rewards',
             'riwayatPenukaran',
-            'artikels'
+            'artikels',
         ));
     }
 }

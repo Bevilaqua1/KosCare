@@ -179,6 +179,16 @@
 
     {{-- ===================== TAB TUKAR POIN (REWARD) ===================== --}}
     <div id="reward-resident" class="tab-content {{ $activeTab == 'reward-resident' ? 'active' : '' }}">
+        {{-- Saldo Poin --}}
+        <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px 24px; margin-bottom: 24px; display: flex; align-items: center; gap: 16px; box-shadow: var(--shadow-sm);">
+            <div style="width: 48px; height: 48px; background: var(--warning-bg); color: #D97706; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                <i class="fa-solid fa-coins"></i>
+            </div>
+            <div>
+                <div style="font-size: 14px; color: var(--text-muted); font-weight: 600;">Saldo Poin Anda</div>
+                <div style="font-size: 28px; font-weight: 800; color: var(--text-main);">{{ $totalPoin }} <span style="font-size: 16px; color: var(--text-muted);">Pts</span></div>
+            </div>
+        </div>
         <h3>Katalog Reward</h3>
         <div class="card-grid">
             @forelse($rewards as $item)

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Resident;
 use App\Http\Controllers\Controller;
 use App\Models\KategoriReward;
 use App\Models\PenukaranPoin;
+use App\Models\SetoranSampah;  
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -27,20 +28,26 @@ class RewardController extends Controller
             'jumlah' => 'required|integer|min:1',
         ]);
 
+         // ... validasi
+
         $reward = KategoriReward::findOrFail($request->reward_id);
         $user = Auth::user();
-        $totalPoin = $user->setoranSampah()->sum('poin_didapat');
+
+        // Hitung saldo poin sebenarnya
+        $totalPoinDiterima = SetoranSampah::where('user_id', $user->id)
+            ->where('status', 'selesai')
+            ->sum('poin_didapat');
+        $totalPoinDipakai = PenukaranPoin::where('user_id', $user->id)
+            ->where('status', 'disetujui')
+            ->sum('total_poin');
+        $saldoPoin = $totalPoinDiterima - $totalPoinDipakai;
 
         $poinDibutuhkan = $reward->poin_diperlukan * $request->jumlah;
 
-        if ($totalPoin < $poinDibutuhkan) {
+        // Cek saldo mencukupi
+        if ($saldoPoin < $poinDibutuhkan) {
             return back()->with('error', 'Poin Anda tidak mencukupi.');
         }
-
-        if ($reward->stok < $request->jumlah) {
-            return back()->with('error', 'Stok tidak mencukupi.');
-        }
-
         PenukaranPoin::create([
             'user_id' => $user->id,
             'kategori_reward_id' => $reward->id,
